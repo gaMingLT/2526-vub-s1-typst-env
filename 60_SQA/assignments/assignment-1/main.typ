@@ -63,6 +63,7 @@
 #show figure.where(): set block(above: 1em, below: 0.25em)
 
 
+#colbreak()
 = Intro
 
 The assign pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and ....
@@ -76,7 +77,6 @@ All indivual complete methods can be found in the Appendix section @appendix.
 
 
 == Abstract & Extending
-
 
 
 The first step in the logic query is retrieving all abstract & extending classes. The method named `get-abstract-and-extending-classes` is responsible for this, the complete method can be found in @method-abstract-extending.
@@ -115,15 +115,239 @@ After the type of the class is retrieved, check that the extending class is not 
 ) <extending-not-abstract>
 
 
+== Checking methods
+
+After the list of abstract and extending classes is generated, continue to the method to refine the results by filtering on methods.
+
+Filtering of the on both types of classes is done by the `check-methods`  method, which can be found in full in @check-methods.
+
+The inner of the method is surrounded with a `one` & `all`. // TODO: Add
+
+Start by iterating the method declerations in the body using the method: `typedeclaration-method`, which retrieves all the `:bodyDeclerations` (=methods) in the body of the class, can be found in @bodydeclerations.
 
 
 
+=== Abstract method
 
+The next step is checking if the retrieve method is an abstract method, the full method can be found in @is-abstract-method.
+
+==== Method Body
+
+The first step is checking what the content of the body of the method is, according to the pattern definition, a abstract method should be empty.
+
+The code can be found in @abstract-body, since the actual Java code can be two different examples as illustrated in @abstract-body-example.
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```java
+      public abstract methodDefinition();
+      // or
+      public abstract methodDefinition() {};
+    ```,
+  ),
+  caption: [*TODO*],
+) <abstract-body-example>
+
+For the first type the Ekeko `body` property will have the `null` type. The second type requires more code, first check the body is not null, by performing a `fail` check. Than retrieve the `statements` property value from the body (the actual expressions). Transform the list to its raw value using `value-raw`. Lastly check the list of statements is empty (count = 0).
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+      ; Get method body
+      (has :body ?abstract-method ?abstract-body)
+      ; Method body is null or has no statements
+      (conde
+        [(value|null ?abstract-body)]
+        [
+         (fails (value|null ?abstract-body))
+         (has :statements ?abstract-body ?stmts)
+         (value-raw ?stmts ?raw)
+         (equals 0 (count ?raw))])
+
+    ```,
+  ),
+  caption: [*TODO*],
+) <abstract-body>
+
+
+
+==== Method Modifiers
+
+Next check the modifiers on the method, in @abstract-modifiers. There are two different types of conditions;
+- public & abstract;
+- protected.
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+      ; Modifiers
+      (has :modifiers ?abstract-method ?modifiers)
+      ; Abstract method is public + abstract or protected
+      (conde
+        [
+         (modifier|public ?mod-public)
+         (contains ?modifiers ?mod-public)
+         (modifier|abstract ?mod-abstract)
+         (contains ?modifiers ?mod-abstract)]
+        [
+         (modifier|protected ?mod-protected)
+         (contains ?modifiers ?mod-protected)])
+
+    ```,
+  ),
+  caption: [*TODO*],
+) <abstract-modifiers>
+
+That concludes the code required for checking if a method is an abstract method.
+
+
+=== Overriding method
+
+The following step is retrieving the overriding method associated with the abstract method, the auxilary method used for this is named: `is-overriding-method` and can be fully found in @is-overriding-method.
+
+
+This information can be retrieved by using the build-in Ekeko method: `(methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)`.
+
+==== Class
+
+After the method is retrieved, retrieve the class associated with the method, reuse the `typedecleration-method` defined earlier, @overriding-query.
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+    ; Get the overrider method from the abstract-method
+    (methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)
+    ; Check if parent class is the same as the extending class of the abstract
+    (typedeclaration-method ?extending ?overrider-method)
+    ```,
+  ),
+  caption: [*TODO*],
+) <overriding-query>
+
+
+==== Method Body
+
+Next the body of the method must be `null`, the code for this can be found in @overriding-body. Retrieve the body of the method using the `:body` property value. After the body is returned, check the body is not null by using a `fails`.
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+      ; Overriding method body cannot be empty
+      (ast :MethodDeclaration ?overrider-method)
+      (has :body ?overrider-method ?overrider-body)
+      (fails (value|null ?overrider-body))
+    ```,
+  ),
+  caption: [*TODO*],
+) <overriding-body>
+
+
+==== Method Modifiers
+
+The final check for the overriding method is checking the modifiers defined on the method, @overriding-modifiers. Retrieve the list of modifiers from the method using the `:modifiers` property value. Get the public modifier value from the `modifier|public` Ekeko built-in method. After that use `contains` to check for the presence of the public modifier in the list of modifiers.
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+      ; Overrider is public
+      (has :modifiers ?overrider-method ?modifiers)
+      (modifier|public ?mod-public)
+      (contains ?modifiers ?mod-public)
+    ```,
+  ),
+  caption: [*TODO*],
+) <overriding-modifiers>
+
+
+=== Overrider & Template Method
+
+Following step checks if the `overrider-method` is present in the `template-method` of the `abstract-class`. Surround the query with a `one` for the `?template-method` value.
+
+Retrieve a method decleration from the abstract class, first check if the name is not the same as the `abstract-method` retrieved earlier. This is done by retrieving the `:name` property on both respective methods. Proceed to check if comparison of name fails.
+
+If that is the case, check if the method is a template method using `is-template-method`, the full code of the method can be found in @is-template-method.
+
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+        ; Check if the overrider method is present
+        ; in the template method of the abstract class
+        (one (fresh [?template-method]
+               (typedeclaration-method ?abstract ?template-method)
+               ; Template method does not equal abstract-method
+               (has :name ?template-method ?template-name)
+               (has :name ?abstract-method ?abstract-name)
+               (fails (name|simple-name|simple|same ?template-name ?abstract-name))
+
+               ; Is template method
+               (is-template-method ?template-method ?template-body)
+
+               (is-algorithm-step ?template-body ?overrider-method)
+             ))
+    ```,
+  ),
+  caption: [*TODO*],
+) <check-overrider-template>
+
+
+
+==== Template Method
+
+
+// TODO: Continue
+
+
+
+== Results
+
+Executing the query as defined above, results in the following result defined in @dp-1-result.
+
+
+#figure(
+  image("images/dis-p-1-result.png"),
+  caption: [Discussion Point 1 - Result],
+) <dp-1-result>
+
+
+
+#colbreak()
 = Discussion Point 2
 
 
 
+
+#set page(columns: 1)
+
 = Appendix <appendix>
+
+
+== Discussion Point 1
 
 
 // TODO: Check if still correct!
@@ -155,13 +379,200 @@ After the type of the class is retrieved, check that the extending class is not 
 
          ; Abstract modifier
          (has :modifiers ?abstract ?modifiers-abstract)
-         (contains ?modifiers-abstract ?mod-abstract)
-
-
-        ))
+         (contains ?modifiers-abstract ?mod-abstract)))
     ```,
   ),
   caption: [*TODO*],
 ) <method-abstract-extending>
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    ```clj
+      (defn check-methods [?abstract ?extending]
+        (fresh [?overrider-body ?overrider-method ?template-method ?abstract-method
+                ?template-body ?template-name ?abstract-name]
+
+          (one (all
+              ; Gets all the childs nodes of abstract class
+              (typedeclaration-method ?abstract ?abstract-method)
+              ; Abstract method
+              (is-abstract-method ?abstract-method)
+
+
+              ; Is overrider method?
+              (is-overriding-method ?abstract-method ?extending ?overrider-method)
+
+              ; Check if the overrider method is present
+              ; in the template method of the abstract class
+              (one (fresh [?template-method]
+                    (typedeclaration-method ?abstract ?template-method)
+                    ; Template method does not equal abstract-method
+                    (has :name ?template-method ?template-name)
+                    (has :name ?abstract-method ?abstract-name)
+                    (fails (name|simple-name|simple|same ?template-name ?abstract-name))
+
+                    ; Is template method
+                    (is-template-method ?template-method ?template-body)
+
+                    (is-algorithm-step ?template-body ?overrider-method)))))))
+    ```,
+  ),
+  caption: [*TODO*],
+) <check-methods>
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    ```clj
+    (defn typedeclaration-method [?class ?method]
+      (child :bodyDeclarations ?class ?method))
+    ```,
+  ),
+  caption: [*TODO*],
+) <bodydeclerations>
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    ```clj
+        ; Is abstract method?
+    (defn is-abstract-method [?abstract-method]
+      (fresh [?abstract-body ?modifiers ?mod-abstract ?mod-public ?mod-protected ?stmts ?raw]
+          ; Method of the abstract class
+          (ast :MethodDeclaration ?abstract-method)
+
+          ; Get method body
+          (has :body ?abstract-method ?abstract-body)
+          ; Method body is null or has no statements
+          (conde
+            [(value|null ?abstract-body)]
+            [
+             (fails (value|null ?abstract-body))
+             (has :statements ?abstract-body ?stmts)
+             (value-raw ?stmts ?raw)
+             (equals 0 (count ?raw))])
+
+
+          ; Modifiers
+          (has :modifiers ?abstract-method ?modifiers)
+          ; Abstract method is public + abstract or protected
+          (conde
+            [
+             (modifier|public ?mod-public)
+             (contains ?modifiers ?mod-public)
+             (modifier|abstract ?mod-abstract)
+             (contains ?modifiers ?mod-abstract)]
+            [
+             (modifier|protected ?mod-protected)
+             (contains ?modifiers ?mod-protected)])))
+    ```,
+  ),
+  caption: [*TODO*],
+) <is-abstract-method>
+
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    ```clj
+        (defn is-overriding-method [?abstract-method ?extending ?overrider-method]
+          (fresh [?overrider-body ?abstract-body ?modifiers ?mod-public]
+              ; Get the overrider method from the abstract-method
+              (methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)
+              ; Check if parent class is the same as the extending class of the abstract
+              (typedeclaration-method ?extending ?overrider-method)
+
+              ; Overriding method body cannot be empty
+              (ast :MethodDeclaration ?overrider-method)
+              (has :body ?overrider-method ?overrider-body)
+              (fails (value|null ?overrider-body))
+
+              ; Overrider is public
+              (has :modifiers ?overrider-method ?modifiers)
+              (modifier|public ?mod-public)
+              (contains ?modifiers ?mod-public)))
+    ```,
+  ),
+  caption: [*TODO*],
+) <is-overriding-method>
+
+
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    ```clj
+    ; Check with algorithm step in template-body
+    (defn is-algorithm-step [?template-body ?overrider-method]
+      (fresh [?stmts ?overrider-name]
+
+        ; Overrider method name
+        (has :name ?overrider-method ?overrider-name)
+        ; Extracts rhs method invocation from the body of the template method
+        (has :statements ?template-body ?stmts)
+
+        ; We need to at least have one match
+        (one (fresh  [?stmt ?expression ?rhs ?inv-name]
+                     ; Iterate each stmt
+                     (contains ?stmts ?stmt)
+                     ; Extract name
+                     (has :expression ?stmt ?expression)
+                     (has :rightHandSide ?expression ?rhs)
+                     (has :name ?rhs ?inv-name)
+
+                     ; 'Compare' with overrider method name
+                     (name|simple-name|simple|same ?overrider-name ?inv-name)))))
+    ```,
+  ),
+  caption: [*TODO*],
+) <is-algorithm-step>
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    ```clj
+    ; Is template method?
+    (defn is-template-method [?template-method ?template-body]
+      (fresh [?mod-abstract ?mod-public ?modifiers ?raw]
+         (ast :MethodDeclaration ?template-method)
+
+         ; Public and non abstract
+         (has :modifiers ?template-method ?modifiers)
+
+         ; Public method
+         (modifier|public ?mod-public)
+         (contains ?modifiers ?mod-public)
+         ; Must be public method only
+         (value-raw ?modifiers ?raw)
+         (equals 1 (count ?raw))
+
+
+         ; Non empty body
+         (has :body ?template-method ?template-body)
+         (fails (value|null ?template-body))))
+    ```,
+  ),
+  caption: [*TODO*],
+) <is-template-method>
+
+
+
+
+
+
+
 
 #bibliography("references.bib")
