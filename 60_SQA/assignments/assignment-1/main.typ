@@ -63,7 +63,7 @@
 #show figure.where(): set block(above: 1em, below: 0.25em)
 
 
-#colbreak()
+// #colbreak()
 = Intro
 
 The assign pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and ....
@@ -72,7 +72,7 @@ All indivual complete methods can be found in the Appendix section @appendix.
 
 
 
-
+#colbreak()
 = Discussion Point 1
 
 
@@ -94,7 +94,7 @@ The first step is retrieving all ast nodes of `:TypeDeclaration` and define this
     (type|class ?type)
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Extending class.],
 ) <retrieve-extending>
 
 
@@ -111,7 +111,7 @@ After the type of the class is retrieved, check that the extending class is not 
     (fails (contains ?modifiers-extending ?mod-abstract))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Modifiers extending class.],
 ) <extending-not-abstract>
 
 
@@ -148,7 +148,7 @@ The code can be found in @abstract-body, since the actual Java code can be two d
       public abstract methodDefinition() {};
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Java method examples],
 ) <abstract-body-example>
 
 For the first type the Ekeko `body` property will have the `null` type. The second type requires more code, first check the body is not null, by performing a `fail` check. Than retrieve the `statements` property value from the body (the actual expressions). Transform the list to its raw value using `value-raw`. Lastly check the list of statements is empty (count = 0).
@@ -172,7 +172,7 @@ For the first type the Ekeko `body` property will have the `null` type. The seco
 
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Abstract body must be empty.],
 ) <abstract-body>
 
 
@@ -205,7 +205,7 @@ Next check the modifiers on the method, in @abstract-modifiers. There are two di
 
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Abstract method, required modifiers.],
 ) <abstract-modifiers>
 
 That concludes the code required for checking if a method is an abstract method.
@@ -235,7 +235,7 @@ After the method is retrieved, retrieve the class associated with the method, re
     (typedeclaration-method ?extending ?overrider-method)
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Retrieving overrider method from abstract method.],
 ) <overriding-query>
 
 
@@ -255,7 +255,7 @@ Next the body of the method must be `null`, the code for this can be found in @o
       (fails (value|null ?overrider-body))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Checking body of overriding method.],
 ) <overriding-body>
 
 
@@ -276,7 +276,7 @@ The final check for the overriding method is checking the modifiers defined on t
       (contains ?modifiers ?mod-public)
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Checking list of modifiers on the overriding method.],
 ) <overriding-modifiers>
 
 
@@ -312,16 +312,94 @@ If that is the case, check if the method is a template method using `is-template
              ))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Validating template method & overrider method.],
 ) <check-overrider-template>
 
 
 
 ==== Template Method
 
+The full `is-template-method` can be found in @is-template-method. The method is responsible for checking if the method decleration is a template-method. A template method has to adhere to the following criteria. It must be a public method and cannot contain any other modifiers. The body of the method is also not allowed to be public.
 
-// TODO: Continue
+In code this translates to the following, first checking the list of modifiers on the method as show in @is-template-method-modifiers.
 
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(
+    lang: false,
+    ```clj
+     ; Public and non abstract
+     (has :modifiers ?template-method ?modifiers)
+
+     ; Public method
+     (modifier|public ?mod-public)
+     (contains ?modifiers ?mod-public)
+     ; Must be public method only
+     (value-raw ?modifiers ?raw)
+     (equals 1 (count ?raw))
+    ```,
+  ),
+  caption: [Modifier check on the template method.],
+) <is-template-method-modifiers>
+
+Retrieve the `:modifiers` property from the method using the `has` query. Retrieving a value for the `public` modifier using `modifier|public` to than check using `contains` if the value is present in the list of modifiers. The length of the list of `modifiers` is also checked to see if it's length is 1, only containing the `public` modifier.
+
+After the modifiers are checked, checking if the body of the method is not empty is done as illustrated in @is-template-method-body.
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(lang: false, ```clj
+    ; Non empty body
+   (has :body ?template-method ?template-body)
+   (fails (value|null ?template-body))
+  ```),
+  caption: [Template mehod non-empty body.],
+) <is-template-method-body>
+
+Validating if a method is a template method in the sense is not complete without the next method named: `is-algorithm-step`.
+
+=== Algorithm Step
+
+The complete `is-algorithm-step` method can be found in @is-algorithm-step. The method starts of with retrieving the name of the `overrider-method` element, the `:statements` property is also retrieved from the `template-body`, as illustrated in @is-algorithm-step-statements.
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(lang: false, ```clj
+    ; Overrider method name
+    (has :name ?overrider-method ?overrider-name)
+    ; Extracts rhs method invocation from the body of the template method
+    (has :statements ?template-body ?stmts)
+  ```),
+  caption: [Method name & body statements.],
+) <is-algorithm-step-statements>
+
+Each statement in the list of statements is than iterated using `contains`, for each, the name of the invocation expression is compared with the name of the given `overrider-name`. The list of queries is surrouned with a `one`, indicating that at least one match for that particular method must be found in the body of the template method.
+
+
+// TODO: Check if still correct!
+#linebreak()
+#figure(
+  zebraw(lang: false, ```clj
+    ; We need to at least have one match
+    (one (fresh  [?stmt ?expression ?rhs ?inv-name]
+                 ; Iterate each stmt
+                 (contains ?stmts ?stmt)
+                 ; Extract name
+                 (has :expression ?stmt ?expression)
+                 (has :rightHandSide ?expression ?rhs)
+                 (has :name ?rhs ?inv-name)
+
+                 ; 'Compare' with overrider method name
+                 (name|simple-name|simple|same ?overrider-name ?inv-name)
+                  )
+  ```),
+  caption: [Comparing method name & invocation name in method body.],
+) <is-algorithm-step-compare>
+
+This completes the list of methods used for querying the Template Method pattern on the `DesignPatterns` folder.
 
 
 == Results
@@ -333,6 +411,8 @@ Executing the query as defined above, results in the following result defined in
   image("images/dis-p-1-result.png"),
   caption: [Discussion Point 1 - Result],
 ) <dp-1-result>
+
+All the expected results for the Template Method pattern in the `DesignPatterns` folder are present in the result of the query.
 
 
 
@@ -382,7 +462,7 @@ Executing the query as defined above, results in the following result defined in
          (contains ?modifiers-abstract ?mod-abstract)))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Method that retrieves a list of abstract and extending classes.],
 ) <method-abstract-extending>
 
 
@@ -400,7 +480,6 @@ Executing the query as defined above, results in the following result defined in
               (typedeclaration-method ?abstract ?abstract-method)
               ; Abstract method
               (is-abstract-method ?abstract-method)
-
 
               ; Is overrider method?
               (is-overriding-method ?abstract-method ?extending ?overrider-method)
@@ -420,7 +499,7 @@ Executing the query as defined above, results in the following result defined in
                     (is-algorithm-step ?template-body ?overrider-method)))))))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Method responsible for checking method declerations on the pair of abstract and extending class.],
 ) <check-methods>
 
 
@@ -429,11 +508,12 @@ Executing the query as defined above, results in the following result defined in
 #figure(
   zebraw(
     ```clj
+    ; Method taken from WPO, get all method declerations
     (defn typedeclaration-method [?class ?method]
       (child :bodyDeclarations ?class ?method))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Retrieves all method declerations from a given class.],
 ) <bodydeclerations>
 
 
@@ -453,8 +533,7 @@ Executing the query as defined above, results in the following result defined in
           ; Method body is null or has no statements
           (conde
             [(value|null ?abstract-body)]
-            [
-             (fails (value|null ?abstract-body))
+            [(fails (value|null ?abstract-body))
              (has :statements ?abstract-body ?stmts)
              (value-raw ?stmts ?raw)
              (equals 0 (count ?raw))])
@@ -464,17 +543,15 @@ Executing the query as defined above, results in the following result defined in
           (has :modifiers ?abstract-method ?modifiers)
           ; Abstract method is public + abstract or protected
           (conde
-            [
-             (modifier|public ?mod-public)
+            [(modifier|public ?mod-public)
              (contains ?modifiers ?mod-public)
              (modifier|abstract ?mod-abstract)
              (contains ?modifiers ?mod-abstract)]
-            [
-             (modifier|protected ?mod-protected)
+            [(modifier|protected ?mod-protected)
              (contains ?modifiers ?mod-protected)])))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Checks if the given method is an abstract method.],
 ) <is-abstract-method>
 
 
@@ -502,7 +579,7 @@ Executing the query as defined above, results in the following result defined in
               (contains ?modifiers ?mod-public)))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Checks if the given method is an overriding method.],
 ) <is-overriding-method>
 
 
@@ -535,7 +612,7 @@ Executing the query as defined above, results in the following result defined in
                      (name|simple-name|simple|same ?overrider-name ?inv-name)))))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Checks the body of the template-method to see if the overrider method is invoced in the body of the method.],
 ) <is-algorithm-step>
 
 
@@ -559,20 +636,13 @@ Executing the query as defined above, results in the following result defined in
          (value-raw ?modifiers ?raw)
          (equals 1 (count ?raw))
 
-
          ; Non empty body
          (has :body ?template-method ?template-body)
          (fails (value|null ?template-body))))
     ```,
   ),
-  caption: [*TODO*],
+  caption: [Checks if the given body is a template method.],
 ) <is-template-method>
-
-
-
-
-
-
 
 
 #bibliography("references.bib")
