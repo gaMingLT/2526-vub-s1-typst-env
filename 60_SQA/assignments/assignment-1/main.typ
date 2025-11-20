@@ -54,25 +54,35 @@
   font-size: 10pt,
 )
 
+// #set text(
+//   // font: "Linux Libertine",
+//   // font: "Font Awesome 6 Brands",
+//   // font: "Roboto",
+//   top-edge: 1em,
+//   bottom-edge: 0em,
+// )
+
 #outline()
 
 // Modify the heading spacing above and below!
 #show heading.where(): set block(above: 0.75em, below: 0.25em)
 
 // Modify the spacing above a figure (codeblock), so the language annotation does not conflict with text.
-#show figure.where(): set block(above: 1em, below: 0.25em)
+#show figure.where(): set block(above: 1em, below: 0.50em)
+
 
 
 // #colbreak()
 = Intro
 
-The assign pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and ....
+The assign pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and @Design_Patterns.
 
 All indivual complete methods can be found in the Appendix section @appendix.
 
 
 
 #colbreak()
+// #pagebreak()
 = Discussion Point 1
 
 
@@ -84,7 +94,6 @@ The first step in the logic query is retrieving all abstract & extending classes
 The first step is retrieving all ast nodes of `:TypeDeclaration` and define this as the `extending` class. Retrieve the type of the declaration and check if the type is a class, @retrieve-extending.
 
 
-// TODO: Check if still correct!
 #figure(
   zebraw(
     lang: false,
@@ -100,7 +109,6 @@ The first step is retrieving all ast nodes of `:TypeDeclaration` and define this
 
 After the type of the class is retrieved, check that the extending class is not defined as an abstract class, @extending-not-abstract.
 
-// TODO: Check if still correct!
 #figure(
   zebraw(
     lang: false,
@@ -121,7 +129,7 @@ After the list of abstract and extending classes is generated, continue to the m
 
 Filtering of the on both types of classes is done by the `check-methods`  method, which can be found in full in @check-methods.
 
-The inner of the method is surrounded with a `one` & `all`. // TODO: Add
+The inner of the method is surrounded with a `one` & `all`.
 
 Start by iterating the method declerations in the body using the method: `typedeclaration-method`, which retrieves all the `:bodyDeclerations` (=methods) in the body of the class, can be found in @bodydeclerations.
 
@@ -137,7 +145,6 @@ The first step is checking what the content of the body of the method is, accord
 
 The code can be found in @abstract-body, since the actual Java code can be two different examples as illustrated in @abstract-body-example.
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -153,7 +160,6 @@ The code can be found in @abstract-body, since the actual Java code can be two d
 
 For the first type the Ekeko `body` property will have the `null` type. The second type requires more code, first check the body is not null, by performing a `fail` check. Than retrieve the `statements` property value from the body (the actual expressions). Transform the list to its raw value using `value-raw`. Lastly check the list of statements is empty (count = 0).
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -184,7 +190,6 @@ Next check the modifiers on the method, in @abstract-modifiers. There are two di
 - protected.
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -223,7 +228,6 @@ This information can be retrieved by using the build-in Ekeko method: `(methodde
 After the method is retrieved, retrieve the class associated with the method, reuse the `typedecleration-method` defined earlier, @overriding-query.
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -243,7 +247,6 @@ After the method is retrieved, retrieve the class associated with the method, re
 
 Next the body of the method must be `null`, the code for this can be found in @overriding-body. Retrieve the body of the method using the `:body` property value. After the body is returned, check the body is not null by using a `fails`.
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -264,7 +267,6 @@ Next the body of the method must be `null`, the code for this can be found in @o
 The final check for the overriding method is checking the modifiers defined on the method, @overriding-modifiers. Retrieve the list of modifiers from the method using the `:modifiers` property value. Get the public modifier value from the `modifier|public` Ekeko built-in method. After that use `contains` to check for the presence of the public modifier in the list of modifiers.
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -290,7 +292,6 @@ If that is the case, check if the method is a template method using `is-template
 
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -323,7 +324,6 @@ The full `is-template-method` can be found in @is-template-method. The method is
 
 In code this translates to the following, first checking the list of modifiers on the method as show in @is-template-method-modifiers.
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -347,7 +347,6 @@ Retrieve the `:modifiers` property from the method using the `has` query. Retrie
 
 After the modifiers are checked, checking if the body of the method is not empty is done as illustrated in @is-template-method-body.
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(lang: false, ```clj
@@ -364,7 +363,6 @@ Validating if a method is a template method in the sense is not complete without
 
 The complete `is-algorithm-step` method can be found in @is-algorithm-step. The method starts of with retrieving the name of the `overrider-method` element, the `:statements` property is also retrieved from the `template-body`, as illustrated in @is-algorithm-step-statements.
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(lang: false, ```clj
@@ -379,7 +377,6 @@ The complete `is-algorithm-step` method can be found in @is-algorithm-step. The 
 Each statement in the list of statements is than iterated using `contains`, for each, the name of the invocation expression is compared with the name of the given `overrider-name`. The list of queries is surrouned with a `one`, indicating that at least one match for that particular method must be found in the body of the template method.
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(lang: false, ```clj
@@ -417,8 +414,63 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 
 
 #colbreak()
+// #pagebreak()
 = Discussion Point 2
 
+When running the resulting query of Discussion Point 1 *exactly*, on the `JhotDraw` folder, there are no results.
+
+To gather more results, part of the query was removed/commented out.
+
+== Comparison
+
+First start by removing the comparison query line in the `is-algorithm-step` method, namely: `name|simple-name|simple|same`, which can be found in @is-algorithm-step-comparison-removed.
+
+#linebreak()
+#figure(
+  zebraw(lang: false, ```clj
+    ; We need to at least have one match
+    (one (fresh  [?stmt ?expression ?rhs ?inv-name]
+                 (...)
+
+                 ; 'Compare' with overrider method name
+                 (name|simple-name|simple|same ?overrider-name ?inv-name))
+  ```),
+  caption: [Comparing method name & invocation name in method body.],
+) <is-algorithm-step-comparison-removed>
+
+Executing the remaining query which this line removed results in the following as defined in @dp-2-result-cmp-removed.
+
+#figure(
+  image("images/disc-p-2-no-cmp.png"),
+  caption: [Discussion Point 2 - Comparison Removed Result],
+) <dp-2-result-cmp-removed>
+
+
+The result already includes more of the expected patterns. When comparing with the expected results as defined in the `xml` file, all results regarding the: `AttributeFigure` are missing, and for the results regarding `AbstractFigure`, there is *1* false positive: `DecoratorFigure` and 3 missing implementations (`DiamondFigure`, `NumberTextFigure`, `BouncingDrawing`).
+
+
+== Is Algorithm Step
+
+The purpose of the `is-algorithm-step` method was to check for the `template-method` in the abstract class of the pattern to check for the overrider methods that are defined as the steps of the algorithm as explained in @Design_Patterns.
+
+When removing the calling of the `is-algorithm-step` method from the logic query, more results are show, but include more false/positives. The results can be seen in @dp-2-result-rmvd-1 & @dp-2-result-rmvd-2.
+
+
+#figure(
+  image("images/disc-p-2-rmvd-1.png"),
+  caption: [Discussion Point 2 - Result 1],
+) <dp-2-result-rmvd-1>
+
+
+#figure(
+  image("images/disc-p-2-rmvd-2.png"),
+  caption: [Discussion Point 2 - Result 2],
+) <dp-2-result-rmvd-2>
+
+
+Analysing the results when removing the method, is that more of the expected results are included, but also more false positives are included, mainly: `Command`, `AbstractHandle`, `PaletteButton` as the abstract classes, and their corresponding extending classes.
+
+No further refined of the query was performed for discussion point 2.
 
 
 
@@ -430,7 +482,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 == Discussion Point 1
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -466,7 +517,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 ) <method-abstract-extending>
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -503,7 +553,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 ) <check-methods>
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -517,7 +566,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 ) <bodydeclerations>
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -556,7 +604,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -585,7 +632,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
@@ -616,7 +662,6 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 ) <is-algorithm-step>
 
 
-// TODO: Check if still correct!
 #linebreak()
 #figure(
   zebraw(
