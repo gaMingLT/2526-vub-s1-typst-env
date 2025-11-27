@@ -74,16 +74,23 @@
 
 = Introduction
 
+The list of resources can be found in the section @resources. First trying to run using the FireSim tool in section @firesim-verilator and the last section on executing manual commands in section @verilator.
+
+
+= Resources <resources>
+
+The following list of resources where used during the course of this research, the most important are listed below:
+- ...
 
 
 
 #colbreak()
-= Metasimulation
+= Metasimulation <metasimulation>
 
 This is about getting metasimulation working in FireSim using the open source simulator Verilator.
 
 
-== FireSim & Verilator
+== FireSim & Verilator <firesim-verilator>
 
 
 == Installation
@@ -125,19 +132,40 @@ After everything is setup, the `firesim infrasetup` command can be run, with the
 
 *ADD*
 
-If that is the case the connection is successfull. Now we modify the config to execute a named config from the config directory. Change the *ADD* file to the following:
+If that is the case the connection is successful. Now we modify the config to execute a named config from the config directory. Change the *ADD* file to the following:
 
 *ADD*
 
 
-If that is done, we can run the infrasetup comamnd again.
+If that is done, we can run the infrasetup command again.
 
 *FROM this point, file not found exception*
 
+Contininuing from this point, running the config, on my end I got the java file not found exception. No solution has been found at the moment of writing this.
 
 
 #colbreak()
-== Chipyard & Verilator
+== Chipyard & Verilator <verilator>
 
 
-Since the
+Since FireSim makes use of Verilator under the hood, I decided to perform manual command executions.
+
+We will make use of the config we specified earlier. Proceed to the `sims/verilator` directory in the chipyard repository. Executing the following command to compile your config: `make CONFIG=<config-name>`. This command should execute without a problem. An example of this command can be found below:
+
+*ADD IMAGE*
+
+After this we can proceed to run a binary, before we can run an RISC-V binary, we must first compile a binary to run. Go into the `test/` directory inside the Chipyard repository. You can decide which binary you want to run, to compile assembly code, read the `README.md` file inside of the directory, it describes on how to compiler all/or a specific binary. I will assume you compiled the `mt-hello.o` file to a `mt-hello.riscv` binary.
+
+With the binary compiled proceed to execute the following command: `make CONFIG=<config-name> BINARY=<path-to-binary> run-binary-hex`
+
+The last `run-binary-hex` specifies to run the binary using the fastmem option, more infor is available in the documentary. Specifying the fastmem option, noticably increases the speed of the simulation. When executing the `mt-hello.riscv` binary, the output will look like something below:
+
+*ADD IMAGE*
+
+
+
+
+
+= Custom Tile/Cores
+
+*TODO*
