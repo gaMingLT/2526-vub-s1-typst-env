@@ -258,7 +258,7 @@ The last `run-binary-hex` specifies to run the binary using the fastmem option, 
 
 
 #figure(
-  image("/assets/Pasted image 20251120115030.png"),
+  image("assets/Pasted image 20251120115030.png"),
   caption: "Executing hello.riscv binary, with slow memory",
 ) <firesim-hello>
 
