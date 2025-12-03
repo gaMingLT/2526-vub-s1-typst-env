@@ -71,10 +71,11 @@
 #show figure.where(): set block(above: 1em, below: 0.50em)
 
 
-#colbreak()
+// #colbreak()
 = Introduction
 
-The list of resources can be found in the section @resources. First trying to run using the FireSim tool in section @firesim-verilator and the last section on executing manual commands in section @verilator.
+The list of resources can be found in the section @resources. First trying to run using the FireSim tool in section @firesim-verilator and the last section on executing manual commands in section @verilator. The TLDR can be found in section @tldr.
+
 
 
 = Resources <resources>
@@ -85,6 +86,28 @@ The following list of resources where used during the course of this research, t
 - https://docs.fires.im/en/latest/Advanced-Usage/Debugging-in-Software/RTL-Simulation.html
 - https://chipyard.readthedocs.io/en/latest/Simulation/Software-RTL-Simulation.html
 - https://chipyard.readthedocs.io/en/stable/Chipyard-Basics/Configs-Parameters-Mixins.html
+
+
+#colbreak()
+= TLDR <tldr>
+
+== Firesim
+
+Config execution using `firesim` manager:
+
+- (re)started from example config files
+- issue with sudo password & parralelism (Fabric package)
+  - fixed by removing parallel annotation & setting password through ENV
+- infrasetup command works for default `midasexamples_gcd`
+- executing error when executing custom config: "Scala: File Not Found Exception"
+
+== Verilator
+
+Manual command execution using `make` & `verilator`:
+
+- running starter config
+- compiling examples binaries in `test` directory
+- running simple example binaries using Verilator.
 
 
 // #colbreak()
@@ -149,12 +172,22 @@ Firesim works based on the use of `*.yaml` configuration scripts. For the metasi
 - `config_build_recipes.yaml`
 
 
-These files can be copied from the `sample-backup-config` directory in the chipyard repo. The `config_runtime.yaml` file should be modified with the following section of code:
+These files can be copied from the `sample-backup-config` directory in the chipyard repo. The `config_runtime.yaml` file should be modified with the following values as shown in @config-runtime.
 
-*INSERT CODE*
+The metasimulation will be done on the same hosts we are managing firesim from. This configuration for the metasimulation slots is specified in the `config_runtime.yaml` file.
 
+The `config_build_recipes.yaml` can stay the same as the default value with the `midasexamples_gcd` recipe specified and referenced in the `config_build_recipes.yaml` in @hw-config.
 
-The metasimulation will be done on the same hosts we are managing firesim from. This configuration for the metasimulation slots must be specified in the following file: *ADD*. And can than be referenced in the `config_runtime.yaml` file.
+#figure(
+  zebraw(
+    lang: false,
+    numbering: false,
+    ```bash
+    default_hw_config: midasexamples_gcd
+    ```,
+  ),
+  caption: [Config parameter value.],
+) <hw-config>
 
 
 ==== Digression
@@ -212,59 +245,73 @@ From the method: `instance_liveness` remove the annotation `@parallel`, in the f
 
 
 
-==== Specifing Metasim Slots
+// ==== Specifing Metasim Slots
 
-This name must match the name of the config defined, which specifies the numbers of cores,memory, abstract config, .. .
+// This name must match the name of the config defined, which specifies the numbers of cores,memory, abstract config, .. .
 
-*CONTINUE*
+// *CONTINUE*
 
-For each run configuration a chip configuration must be specified, the most important value of the config, is the name of the config in the `config` directory.
+// For each run configuration a chip configuration must be specified, the most important value of the config, is the name of the config in the `config` directory.
 
 
 
 === Setup & Workload
 
-After everything is setup, the `firesim infrasetup` command can be run, with the first example `gcd` there should be no errors, and the following kind of output should be visible:
+After everything is setup, the `firesim infrasetup` command can be run, with the first example `gcd` there should be no errors.
 
-*ADD*
+In case of errors: a potential issue might be a missing directory named: `sim_slot_0`, in the home directory of the user used to execute the command.
 
-If that is the case the connection is successful. Now we modify the config to execute a named config from the config directory. Change the *ADD* file to the following:
+If that is the case the connection is successful. Now we modify the config to execute a named config from the config directory. Change the `config_runtime.yaml` file and modify the `default_hw_config` parameter to specify a configuration in the `config_build_recipes.yaml`.
 
-*ADD*
+If that is done, the `infrasetup` command can be executed again.
 
-
-If that is done, we can run the infrasetup command again.
-
-*FROM this point, file not found exception*
-
-Contininuing from this point, running the config, on my end I got the java file not found exception. No solution has been found at the moment of writing this.
+*FROM this point on, file not found exception*
 
 
-#colbreak()
+#box(fill: orange.lighten(30%), inset: 5pt, radius: 5pt)[
+  Contininuing from this point, running the config, on my end I got the file not found exception. No solution has been found at the moment of writing this.
+]
+
+
+// #colbreak()
 == Chipyard & Verilator <verilator>
 
 
 Since FireSim makes use of Verilator under the hood, I decided to perform manual command executions.
 
-We will make use of the config we specified earlier. Proceed to the `sims/verilator` directory in the chipyard repository. Executing the following command to compile your config: `make CONFIG=<config-name>`. This command should execute without a problem. An example of this command can be found below:
+We will make use of the config we specified earlier. Proceed to the `sims/verilator` directory in the chipyard repository. Executing the following command to compile your config: `make CONFIG=<config-name>`. This command should execute without a problem.
 
-*ADD IMAGE*
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // Tutorial Phase 1: Configure the cores, caches
+    class TutorialStarterConfig extends Config(
+      // CUSTOMIZE THE CORE
+      new freechips.rocketchip.rocket.WithNHugeCores(4)
+      new freechips.rocketchip.subsystem.WithNBanks(4) ++
+      new chipyard.config.AbstractConfig
+    )
+    ```,
+  ),
+  caption: [Tutorial Starter Config],
+) <tutorial-starter-config>
 
 After this we can proceed to run a binary, before we can run an RISC-V binary, we must first compile a binary to run. Go into the `test/` directory inside the Chipyard repository. You can decide which binary you want to run, to compile assembly code, read the `README.md` file inside of the directory, it describes on how to compiler all/or a specific binary. I will assume you compiled the `mt-hello.o` file to a `mt-hello.riscv` binary.
 
 With the binary compiled proceed to execute the following command: `make CONFIG=<config-name> BINARY=<path-to-binary> run-binary-hex`
 
-The last `run-binary-hex` specifies to run the binary using the fastmem option, more infor is available in the documentary. Specifying the fastmem option, noticably increases the speed of the simulation. When executing the `mt-hello.riscv` binary, the output will look like something in @firesim-hello, which executes the non multi-threaded version of the binary.
+The last `run-binary-hex` specifies to run the binary using the fastmem option, more infor is available in the documentary. Specifying the fastmem option, noticably increases the speed of the simulation. When executing the `mt-hello.riscv` binary, the output will look like something in @firesim-hello.
 
 
 #figure(
-  image("assets/Pasted image 20251120115030.png"),
-  caption: "Executing hello.riscv binary, with slow memory",
+  image("assets/mt-hello.png"),
+  caption: "Executing mt-hello.riscv binary, with fast memory",
 ) <firesim-hello>
 
 
 
-
+#colbreak()
 = Custom Tile/Cores
 
 *In progress*
@@ -273,3 +320,58 @@ The last `run-binary-hex` specifies to run the binary using the fastmem option, 
 = Running Proper Workloads
 
 *In progress*
+
+
+
+#set page(columns: 1)
+== Appendix
+
+#figure(
+  zebraw(
+    lang: false,
+    // numbering: false,
+    ```yaml
+
+    run_farm:
+      base_recipe: run-farm-recipes/externally_provisioned.yaml
+      recipe_arg_overrides:
+        default_platform: EC2InstanceDeployManager
+        default_simulation_dir: /home/firesim
+        default_fpga_db: /opt/firesim-db.json
+
+        run_farm_hosts_to_use:
+            - localhost: four_metasims_spec
+
+        run_farm_host_specs:
+            - four_metasims_spec:
+                num_fpgas: 0
+                num_metasims: 4
+                use_for_switch_only: false
+
+
+    metasimulation:
+        metasimulation_enabled: true
+        # vcs or verilator. use vcs-debug or verilator-debug for waveform generation
+        metasimulation_host_simulator: verilator
+        # plusargs passed to the simulator for all metasimulations
+        metasimulation_only_plusargs: "+fesvr-step-size=128 +max-cycles=100000000"
+        # plusargs passed to the simulator ONLY FOR vcs metasimulations
+        metasimulation_only_vcs_plusargs: "+vcs+initreg+0 +vcs+initmem+0"
+
+    # DOCREF START: target_config area
+    target_config:
+        topology: no_net_config
+        no_net_num_nodes: 1
+        link_latency: 6405
+        switching_latency: 10
+        net_bandwidth: 200
+        profile_interval: -1
+
+        default_hw_config: midasexamples_gcd
+        plusarg_passthrough: ""
+
+    (...)
+    ```,
+  ),
+  caption: [Config Runtime File],
+) <config-runtime>
