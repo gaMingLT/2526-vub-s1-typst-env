@@ -76,7 +76,7 @@
 #colbreak()
 = Intro
 
-All complete code can be found in the Appendix section @appendix.
+Complete code snippets can be found in the Appendix section @appendix of the respective section.
 
 
 #set page(columns: 1)
@@ -297,29 +297,79 @@ Keeping the value of x the same, but changing the value of $z$, as to negate the
 So the chosen input did not show any new branches, therefore revert back to the previous input with:
 - $x = 0$
 - $z = 0$
+and
+- $y = 2640$
 
 
 #colbreak()
 === Iteration 4
 
+#table(
+  columns: (0.65fr, 1fr, 1fr, 1fr),
+  [*Code*], [*Concrete Store*], [*Symbolic Store*], [*Path Conditions*],
+  [main ( ) {], [], [], [],
+  [var x , y , z ;], [], [], [],
 
+  [x = input ;], [[x -> 0] (input = 0)], [[x -> a]], [],
+
+  [z = input ;], [[x -> 0, z -> 0] (input = 0)], [[x -> a, z -> b]], [],
+
+  [y = &x ;], [[x -> 0, z -> 0, y -> x]], [[x -> a, z -> b, y -> x]], [],
+
+  [if ( x > 0) {], [[x -> 0, z -> 0, y -> x]], [[x -> a, z -> b, y -> x]], [[!(a > 0)]],
+
+  [    y = &z ;], [/], [/], [||],
+
+  [} else {], [||], [||], [||],
+
+  [   `*y = input ;`], [[x -> 2640, z -> 0, y -> x] (input = 2640)], [[x -> a, z -> b, y -> x]], [||],
+
+  [}], [||], [||], [||],
+
+  [`*y = *y + 7 ;`],
+  [[x -> 2647, z -> 0, y -> x] (7 + 2640)
+  ],
+  [[x -> a, z -> b, y -> x]
+  ],
+  [||],
+
+  [if (2 > z ) {], [||], [||], [[!(a > 0) and (2 > (b + 7))]],
+
+  [   `if (*y == 2647) {`], [/], [/], [[!(a > 0) and (2 > (b + 7)) and (a == 2647)]],
+
+  [      error 1 ;], [Error], [], [],
+
+  [     }], [], [], [],
+
+  [}], [], [], [],
+
+  [`return *y ;`], [], [], [],
+
+  [}], [-], [-], [],
+)
 
 
 #linebreak()
+Found failure sequence for input: $x = 0, z = 0, y = 2640$.
+
+This concludes the concolic testing for this example, other input's can be found but they do not change the behaviour of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
+
+// #colbreak()
+// === Iteration 5
+
+// #linebreak()
 
 
-#colbreak()
-=== Iteration 5
 
-
-
-
-#linebreak()
-
-
-
+#set page(columns: 2)
 #pagebreak()
 == Comparison
+
+When looking at the output of the concolic testing using TIP, the input's are chosen randomly. While in contrast, using manual concolic execution, values can be chosen more targeted, in the sense arriving more easier to failure sequences.
+
+But the cost of keeping track of all values throughout execution is difficult for larger programs.
+
+In the end both execution should arrive at the 'same' values, with values depending on the program accepted range of input.
 
 
 == TIP Pointer Support
@@ -327,7 +377,7 @@ So the chosen input did not show any new branches, therefore revert back to the 
 
 
 
-#set page(columns: 2)
+// #set page(columns: 2)
 = Discussion Point 2
 
 // Then, discuss how your implementation performs concolic testing on the followingTIP program. For example,what does the execution tree look like? How many paths are there? Are there any unsatisfiable paths? What does this program do? When is the error triggered?
