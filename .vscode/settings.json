@@ -1,5 +1,5 @@
 {
-  "spellright.language": ["en"],
+  "spellright.language": ["en-GB"],
   "spellright.documentTypes": ["markdown", "latex", "plaintext", "typst"],
   "spellright.parserByClass": {
     "typst": {

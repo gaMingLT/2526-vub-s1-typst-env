@@ -72,7 +72,7 @@
 
 
 
-// #colbreak()
+#colbreak()
 = Intro
 
 The assign pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and @Design_Patterns.
