@@ -83,9 +83,13 @@ All complete code can be found in the Appendix section @appendix.
 // #colbreak()
 = Discussion Point 1
 
-== Legend
+== Manual Execution
 
-*TODO* Add table symbol explanations.
+=== Legend
+
+The meaning of the values in the table(s) below:
+- `/` program did not enter this line
+- `||` value is the same as the previous value
 
 // #table(
 //   columns: (1fr, 1fr, 1fr, 1fr),
@@ -111,7 +115,7 @@ All complete code can be found in the Appendix section @appendix.
 //   [}], [], [], [],
 // )
 
-== Iteration 1
+=== Iteration 1
 
 #table(
   columns: (0.65fr, 1fr, 1fr, 1fr),
@@ -157,8 +161,168 @@ All complete code can be found in the Appendix section @appendix.
   [}], [-], [-], [[!(a > 0) and !(2 > (b + 7))]],
 )
 
+#linebreak()
+With the above result, negate the first condition $not(a gt 0)$ from the PC: $not(a gt 0) and (b + 7)$. The input for the next iteration is as follows:
+- $x = 1$
+- $z = 0$
 
-== Iteration 2
+
+#colbreak()
+=== Iteration 2
+
+#table(
+  columns: (1fr, 1fr, 1fr, 1fr),
+  [*Code*], [*Concrete Store*], [*Symbolic Store*], [*Path Conditions*],
+  [main ( ) {], [], [], [],
+  [var x , y , z ;], [], [], [],
+
+  [x = input ;], [[x -> 1] (input = 1)], [[x -> a]], [],
+
+  [z = input ;], [[x -> 1, z -> 0] (input = 0)], [[x -> a, z -> b]], [],
+
+  [y = &x ;], [[x -> 1, z -> 0, y -> x]], [[x -> a, z -> b, y -> x]], [],
+
+  [if ( x > 0) {],
+  [||],
+  [],
+  [ [(a > 0)]
+  ],
+
+  [    y = &z ;], [[x -> 1, z -> 0, y -> z]], [[x -> a, z -> b, y -> z]], [],
+
+  [} else {], [/], [], [],
+
+  [   `*y = input ;`], [/], [], [],
+
+  [}], [/], [], [],
+
+  [`*y = *y + 7 ;`],
+  [[x -> 1, z -> 7, y -> x] (7 + 0)
+  ],
+  [[x -> a, z -> b, y -> x]
+  ],
+  [||],
+
+  [if (2 > z ) {],
+  [],
+  [],
+  [[(a > 0) and !(2 > (b + 7))]
+  ],
+
+  [   `if (*y == 2647) {`],
+  [],
+  [],
+  [
+  ],
+
+  [      error 1 ;], [], [], [],
+
+  [    }], [], [], [],
+
+  [}], [], [], [],
+
+  [`return *y ;`], [7], [], [],
+
+  [}], [], [], [],
+)
+
+#linebreak()
+With the extended path condition now consisting of: $(a gt 0) and not(2 gt (b + 7)))$. The previous input resulted in the first 2 clauses of the PC to be true. For the next iteration the following input values will be chosen:
+- $x = 1$
+- $z = -5$
+
+Keeping the value of x the same, but changing the value of $z$, as to negate the second clause of the PC.
+
+
+#colbreak()
+=== Iteration 3
+
+#table(
+  columns: (1fr, 1fr, 1fr, 1fr),
+  [*Code*], [*Concrete Store*], [*Symbolic Store*], [*Path Conditions*],
+  [main ( ) {], [], [], [],
+  [var x , y , z ;], [], [], [],
+
+  [x = input ;], [[x -> 1] (input = 1)], [[x -> a]], [],
+
+  [z = input ;], [[x -> 1, z -> -5] (input = -5)], [[x -> a, z -> b]], [],
+
+  [y = &x ;], [[x -> 1, z -> -5, y -> x]], [[x -> a, z -> b, y -> x]], [],
+
+  [if ( x > 0) {],
+  [||],
+  [],
+  [ [(a > 0)]
+  ],
+
+  [    y = &z ;], [[x -> 1, z -> -5, y -> z]], [[x -> a, z -> b, y -> z]], [],
+
+  [} else {], [/], [], [],
+
+  [   `*y = input ;`], [/], [], [],
+
+  [}], [/], [], [],
+
+  [`*y = *y + 7 ;`],
+  [[x -> 1, z -> 2, y -> x] (7 + -5)
+  ],
+  [[x -> a, z -> b, y -> x]
+  ],
+  [||],
+
+  [if (2 > z ) {],
+  [],
+  [],
+  [[(a > 0) and !(2 > (b + 7))]
+  ],
+
+  [   `if (*y == 2647) {`],
+  [],
+  [],
+  [
+  ],
+
+  [      error 1 ;], [], [], [],
+
+  [    }], [], [], [],
+
+  [}], [], [], [],
+
+  [`return *y ;`], [2], [], [],
+
+  [}], [], [], [],
+)
+
+#linebreak()
+So the chosen input did not show any new branches, therefore revert back to the previous input with:
+- $x = 0$
+- $z = 0$
+
+
+#colbreak()
+=== Iteration 4
+
+
+
+
+#linebreak()
+
+
+#colbreak()
+=== Iteration 5
+
+
+
+
+#linebreak()
+
+
+
+#pagebreak()
+== Comparison
+
+
+== TIP Pointer Support
 
 
 
@@ -166,6 +330,7 @@ All complete code can be found in the Appendix section @appendix.
 #set page(columns: 2)
 = Discussion Point 2
 
+// Then, discuss how your implementation performs concolic testing on the followingTIP program. For example,what does the execution tree look like? How many paths are there? Are there any unsatisfiable paths? What does this program do? When is the error triggered?
 
 
 = Discussion Point 3
