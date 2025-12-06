@@ -376,12 +376,57 @@ In the end both execution should arrive at the 'same' values, with values depend
 
 == TIP Pointer Support
 
-*TODO*
+TIP Pointer support can be found in the `Interpreter.scala` file. In @pointer-reference & @pointer-dereference, the TIP implementation for pointer referencing (`&z`) and dereferencing (`*y`) is shown.
 
+=== Reference
+
+Match the `AExpr` on the class `AVarRef`, to set a variable reference.
+
+#figure(
+  zebraw(
+    lang: false,
+    hanging-indent: true,
+    ```scala
+    case AVarRef(e: AIdentifier, _) =>
+      // DP1 - &z value position
+      log.debug("Variable reference: " + exp)
+      (env(e.declaration), store)
+    ```,
+  ),
+  caption: [Interpreter - Pointer Reference],
+) <pointer-reference>
+
+
+=== Dereference
+
+Dereference is done by matching on `AUnaryOp` & `DerefOp`, retrieving the `ReferenceValue` from the result of applying `semright` on the expression.
+
+#figure(
+  zebraw(
+    lang: false,
+    hanging-indent: true,
+    ```scala
+    case e: AUnaryOp =>
+      val (sub, s1) = semeright(e.subexp, env, store)
+      val cval = e.operator match {
+        case DerefOp =>
+          // DP1 - *z value position
+          log.debug("Dereference Operator: " + exp)
+          sub match {
+            case crv: ReferenceValue =>
+              s1.getOrElse(crv, errorUninitializedLocation(exp.loc, s1))
+            case _ => errorDerefNotPointer(exp.loc, sub, s1)
+          }
+      }
+      (cval, s1)
+    ```,
+  ),
+  caption: [Interpreter - Pointer Dereference],
+) <pointer-dereference>
 
 
 // #set page(columns: 2)
-// #colbreak()
+#colbreak()
 = Discussion Point 2
 
 The modified files are those with starting annotations: `SymbolicValues.scala`, `Interpreter.scala` and `SMTSolver.scala`.
@@ -659,9 +704,9 @@ The results of the concolic testing can be summarized and are visible in @strate
   table(
     columns: (1fr, 1fr, 1fr),
     [*Strategy*], [*Runs*], [*Failures*],
-    [DFS], [21], [*ADD*],
-    [BFS], [21], [*ADD*],
-    [Random], [21], [*ADD*],
+    [DFS], [21], [1],
+    [BFS], [21], [1],
+    [Random], [21], [1],
   ),
   caption: [Concolic Testing - Search Strategies],
 ) <strategies-runs>
