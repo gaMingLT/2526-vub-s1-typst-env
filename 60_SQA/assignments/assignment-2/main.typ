@@ -3,6 +3,8 @@
 // Code Blocks
 #import "@preview/zebraw:0.5.2": *
 #show: zebraw
+// #show: zebraw.with(..zebraw-themes.zebra)
+
 
 #let cuhk = super(sym.suit.spade)
 
@@ -374,13 +376,200 @@ In the end both execution should arrive at the 'same' values, with values depend
 
 == TIP Pointer Support
 
+*TODO*
 
 
 
 // #set page(columns: 2)
+// #colbreak()
 = Discussion Point 2
 
-// Then, discuss how your implementation performs concolic testing on the followingTIP program. For example,what does the execution tree look like? How many paths are there? Are there any unsatisfiable paths? What does this program do? When is the error triggered?
+The modified files are those with starting annotations: `SymbolicValues.scala`, `Interpreter.scala` and `SMTSolver.scala`.
+
+== Implementation
+
+This subsection will discuss the implementation of concolic testing on arrays in TIP. In order of sequence will the operations be discussed: Interpreter, SymbolicValues and last SMTSolver.
+
+=== Interpreter
+
+#heading(numbering: none, level: 4, outlined: false)[Array Creation]
+
+The code for this operation was already given.
+
+#heading(numbering: none, level: 4, outlined: false)[Array Select]
+
+#figure(
+  zebraw(
+    lang: false,
+    hanging-indent: true,
+    ```scala
+    // MOD-DP2
+    // Array Access - since we are on the right side of an expression
+    case AArrAcc(arr, idx, _) =>
+      // Evaluate the idx
+      val (idxv, s1) = semeright(idx, env, store)
+      // Using the new store, evaluate the arr
+      val (arrv, s2) = semeright(arr, env, s1)
+      // Get the value and return the latest store
+      (idxv, arrv) match {
+        case (idxv: IntValue, arrv: ArrValue) =>
+          log.debug("[IP] - Selecting value")
+          (spec.arraySelect(arrv, idxv, idxv), s2)
+      }
+    ```,
+  ),
+  caption: [Interpreter - Select Array],
+) <interpreter-select-array>
+
+#heading(numbering: none, level: 4, outlined: false)[Array Store]
+
+
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    case AAssignStmt(left: AArrAcc, right: AExpr, _) =>
+      // Left index
+      val (idxv, s1) = semeright(left.idx, env, store)
+      // Left array
+      val (arrv, s2) = semeright(left.arr, env, s1)
+      // Value to place in array
+      val (rhsv, s3) = semeright(right, env, s2)
+      (idxv, arrv, left.arr, rhsv) match {
+        // MOD-DP2
+        case (idxv: IntValue, arrv: ArrValue, id: AIdentifier, rhsv: IntValue) =>
+          log.debug("[IP] - Storing array value")
+          // Get updated array
+          val updatedArray: ArrValue = spec.arrayStore(arrv, idxv, rhsv)
+          // Get reference value from env
+          val referenceValue = env.getOrElse(id, null)
+          // Update store
+          (env, s3 + (referenceValue -> updatedArray))
+      }
+    ```,
+  ),
+  caption: [Interpreter - Store Array],
+) <interpreter-store-array>
+
+
+=== SymbolicValues
+
+Based on the operation performed in the interpreter, created the symbolic value, to later pass to the SMTSolver.
+
+#heading(numbering: none, level: 4, outlined: false)[Array Creation]
+
+Iterate over the list of `vals`, retrieve the symbolic value of each and store in a sequence of `AExpr`. Return a `SymbArrValue`, containing the vector of `refs` and `AArrOp` element as second field, with `symbolicArray` as first element.
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // MOD-DP2
+    def arrayValue(refs: Vector[ReferenceValue], vals: Vector[IntValue]): ArrValue = {
+      log.debug("[SV] - Creating array value")
+      // Create a sequence of symbolic expressions
+      val symbolicArray: Seq[AExpr] = vals.map {
+        case SymbIntValue(_, symbolic) => symbolic
+      }
+
+      log.debug("[SV] - Array content: " + symbolicArray)
+      SymbArrValue(refs, AArrOp(symbolicArray, noLoc))
+    }
+    ```,
+  ),
+  caption: [SymbolicValues - Create Array],
+) <symbolic-create-array>
+
+
+#heading(numbering: none, level: 4, outlined: false)[Array Select]
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // MOD-DP2
+    def arraySelect(arr: ArrValue, idx: IntValue, v: IntValue): IntValue = {
+      (arr, idx) match {
+        case (arr: SymbArrValue, idx: SymbIntValue) =>
+          log.debug("[SV] - Selecting value in array")
+          SymbIntValue(v.i, AArrAcc(arr.symbolic, idx.symbolic, noLoc))
+      }
+    }
+    ```,
+  ),
+  caption: [SymbolicValues - Select Array],
+) <symbolic-select-array>
+
+
+
+
+#heading(numbering: none, level: 4, outlined: false)[Array Store]
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // MOD-DP2
+    def arrayStore(arr: ArrValue, idx: IntValue, v: IntValue): ArrValue = {
+      (arr, idx, v) match {
+        case (arr: SymbArrValue, idx: SymbIntValue, v: SymbIntValue) => {
+          log.debug("[SV] - Setting value in array")
+          SymbArrValue(arr.content, AArrUpdate(arr.symbolic, idx.symbolic, v.symbolic, noLoc))
+        }}}}}
+    ```,
+  ),
+  caption: [SymbolicValues - Store Array],
+) <symbolic-store-array>
+
+
+
+=== SMTSolver
+
+
+#heading(numbering: none, level: 4, outlined: false)[Array Creation]
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+
+    ```,
+  ),
+  caption: [SMTSolver - Create Array],
+) <solver-store-array>
+
+
+#heading(numbering: none, level: 4, outlined: false)[Array Select]
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+
+    ```,
+  ),
+  caption: [SMTSolver - Select Array],
+) <solver-select-array>
+
+#heading(numbering: none, level: 4, outlined: false)[Array Store]
+
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+
+    ```,
+  ),
+  caption: [SMTSolver - Store Array],
+) <solver-store-array>
+
+
+
+
+== Execution Analysis
+
+// For example,what does the execution tree look like? How many paths are there? Are there any unsatisfiable paths? What does this program do? When is the error triggered?
 
 
 = Discussion Point 3
