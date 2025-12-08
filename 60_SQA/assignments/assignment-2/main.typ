@@ -354,7 +354,7 @@ and
 #linebreak()
 Found failure sequence for input: $x = 0, z = 0, y = 2640$.
 
-This concludes the concolic testing for this example, other input's can be found but they do not change the behaviour of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
+This concludes the concolic testing for this example, other input's can be found but they do not change the behavior of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
 
 // #colbreak()
 // === Iteration 5
@@ -437,11 +437,15 @@ This subsection will discuss the implementation of concolic testing on arrays in
 
 === Interpreter
 
+The purpose of the interpreter statements is updating/accessing the store with the correct reference values of the array & concrete values stored in the array.
+
 #heading(numbering: none, level: 4, outlined: false)[Array Creation]
 
-The code for this operation was already given.
+The created array is iterated and the store is updated by use of a fold. Each concrete value is given a reference value, with the reference value kept within the symbolic array.
 
 #heading(numbering: none, level: 4, outlined: false)[Array Select]
+
+Retrieve the `location` of the concrete value by accessing the `content` field on the array, using the integer value of the `idxv`. Once the location is retrieved the concrete value can be accessed by accessing the `s2` variable or the updated store.
 
 #figure(
   zebraw(
@@ -459,16 +463,27 @@ The code for this operation was already given.
       (idxv, arrv) match {
         case (idxv: IntValue, arrv: ArrValue) =>
           log.debug("[IP] - Selecting value")
-          (spec.arraySelect(arrv, idxv, idxv), s2)
+          // Get reference value
+          val location = arrv.content(idxv.i)
+          // Access concrete value from store
+          val concreteValue: IntValue = s2.getOrElse(location, null) match {
+              case intValue: IntValue => intValue
+            }
+          // Return symbolic value & updated store
+          (spec.arraySelect(arrv, idxv, concreteValue), s2)
       }
     ```,
   ),
   caption: [Interpreter - Select Array],
 ) <interpreter-select-array>
 
+Apply the `arraySelect` method to generate the symbolic value of the array operation. Return the symbolic value and updated store.
+
 #heading(numbering: none, level: 4, outlined: false)[Array Store]
 
+First generate the symbolic values of the array updated. Retrieve the concrete reference for the array (`arrayReference`) by accessing the `env`using the `id` which is a location type.
 
+Accessing the reference for the updated value (`valueReference`)is done by accessing the `content` field on the array. Return a tuple of the `env` and updated store with concrete references to both the array & concrete value updated.
 
 #figure(
   zebraw(
@@ -487,10 +502,12 @@ The code for this operation was already given.
           log.debug("[IP] - Storing array value")
           // Get updated array
           val updatedArray: ArrValue = spec.arrayStore(arrv, idxv, rhsv)
-          // Get reference value from env
-          val referenceValue = env.getOrElse(id, null)
-          // Update store
-          (env, s3 + (referenceValue -> updatedArray))
+          // Get reference value array from env
+          val arrayReference = env.getOrElse(id, null)
+          // Get reference value value
+          val valueReference = updatedArray.content(idxv.i)
+          // Update store with reference for array & value
+          (env, s3 + (arrayReference -> updatedArray) + (valueReference -> rhsv))
       }
     ```,
   ),
@@ -574,15 +591,35 @@ Iterate over the list of `vals`, retrieve the symbolic value of each and store i
 
 #heading(numbering: none, level: 4, outlined: false)[Array Creation]
 
+A constant array in Z3 is created by the following statement: `((as const (Array Int Int) 0)`. If there are no elements in the array, return just the array starting value. If there are elements present, create the populated array from the base values with a chained list of `store` statements populating it.
+
 #figure(
   zebraw(
     lang: false,
     ```scala
-
+    // MOD-DP2
+    // ((as const (Array Int Int) 0)
+    case AArrOp(elems, _) =>
+      log.debug("[SMT] - Array")
+      // Z3 Starting array value
+      val startingArray = "((as const (Array Int Int)) 0)"
+      if (elems.isEmpty) {
+        // If no elements, return the empty array
+        startingArray
+      } else {
+        // Create the constant array from individual store statements
+        val populatedArray = elems.zipWithIndex.foldLeft(startingArray) {
+          case (acc, (elem, idx)) =>
+            s"(store $acc ${idx.toString} ${expToSexp(elem)})"
+        }
+        populatedArray
+      }
     ```,
   ),
   caption: [SMTSolver - Create Array],
 ) <solver-store-array>
+
+The `select` & `store` expand the array with the elements, as shown above, appending the new operation to it.
 
 
 #heading(numbering: none, level: 4, outlined: false)[Array Select]
@@ -591,7 +628,11 @@ Iterate over the list of `vals`, retrieve the symbolic value of each and store i
   zebraw(
     lang: false,
     ```scala
-
+    // MOD-DP2
+    // (select ((as const (Array Int Int) 0) x)
+    case AArrAcc(arr, idx, _) =>
+      log.debug("[SMT] - Select")
+      s"(select ${expToSexp(arr)} ${expToSexp(idx)})"
     ```,
   ),
   caption: [SMTSolver - Select Array],
@@ -603,7 +644,11 @@ Iterate over the list of `vals`, retrieve the symbolic value of each and store i
   zebraw(
     lang: false,
     ```scala
-
+    // MOD-DP2
+    // (store ((as const (Array Int Int) 0) x y)
+    case AArrUpdate(arr, idx, v, _) =>
+      log.debug("[SMT] - Update")
+      s"(store ${expToSexp(arr)} ${expToSexp(idx)} ${expToSexp(v)})"
     ```,
   ),
   caption: [SMTSolver - Store Array],
@@ -615,6 +660,12 @@ Iterate over the list of `vals`, retrieve the symbolic value of each and store i
 == Execution Analysis
 
 // For example,what does the execution tree look like? How many paths are there? Are there any unsatisfiable paths? What does this program do? When is the error triggered?
+
+
+The program execution performed $36$ runs, of which $27$ where successful and $9$ contain errors or unsatisfiable path.
+
+// TODO: Add more here?
+*TODO*
 
 
 = Discussion Point 3
@@ -692,6 +743,7 @@ The method will proceed as before, the only remaining difference is the case whe
 
 
 
+#colbreak()
 = Discussion Point 4
 
 This section will discuss the implementation of the different search strategies and the effect on the number of runs & resulting errors cases.
@@ -718,9 +770,6 @@ Since the purpose of concolic testing, is the exploration of all branches, chang
 #set page(columns: 1)
 = Appendix <appendix>
 
-== Discussion Point 1
-
-== Discussion Point 2
 
 == Discussion Point 3
 
@@ -828,8 +877,8 @@ Since the purpose of concolic testing, is the exploration of all branches, chang
   caption: [Random Priority Strategy],
 ) <random-strategy>
 
-== Discussion Point 4
+// == Discussion Point 4
 
 
 
-#bibliography("references.bib")
+// #bibliography("references.bib")
