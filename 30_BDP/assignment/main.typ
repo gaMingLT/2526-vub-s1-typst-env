@@ -5,6 +5,7 @@
 #show: zebraw
 // #show: zebraw.with(..zebraw-themes.zebra)
 
+#import "@preview/lilaq:0.5.0" as lq
 
 #let cuhk = super(sym.suit.spade)
 
@@ -249,9 +250,15 @@ The chosen predicate model is: `RandomForestRegressor`, since this is what was r
 
 For all benchmarks, 4 runs where done, the first one was considered a dry run and proceeding 3, the average was taken.
 
-== Macbook
+For the types of benchmarks ran on each host on the local context, both used the same provided dataset:
+- Type 1: No cache/persist & other default settings
+- Type 2: Cache & other default settings
+- Type 3: Persist & other default settings
 
-=== Specifications
+
+== Specifications
+
+=== Macbook
 
 #table(
   columns: (1fr, 1fr),
@@ -263,15 +270,8 @@ For all benchmarks, 4 runs where done, the first one was considered a dry run an
 )
 
 
+=== Desktop
 
-
-
-===
-
-
-== Desktop
-
-=== Specifications
 
 #table(
   columns: (1fr, 1fr),
@@ -283,6 +283,29 @@ For all benchmarks, 4 runs where done, the first one was considered a dry run an
   [Versie	10.0.22631 Build 22631
   ],
 )
+
+
+== Results
+
+#let xs = (0, 1, 2)
+#let labels = ("None", "Cache", "Persist")
+
+#let macbook = (12, 21.33, 22.667)
+#let desktop = (16, 27, 26.67)
+
+#lq.diagram(
+  title: [Performance],
+  xlabel: "Type",
+  ylabel: "Time (Seconds)",
+
+  xaxis: (ticks: xs.zip(labels)),
+
+  lq.plot(xs, macbook, mark: "s", label: [Macbook Pro]),
+  lq.plot(xs, desktop, mark: "s", label: [Desktop]),
+)
+
+
+
 
 
 #set page(columns: 1)
