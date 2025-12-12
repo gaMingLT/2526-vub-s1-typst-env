@@ -75,9 +75,7 @@
 #colbreak()
 = Intro
 
-The assign pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and @Design_Patterns.
-
-All indivual complete methods can be found in the Appendix section @appendix.
+The assigned pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and @Design_Patterns. All indivual complete methods can be found in the Appendix section @appendix.
 
 
 
@@ -85,13 +83,15 @@ All indivual complete methods can be found in the Appendix section @appendix.
 // #pagebreak()
 = Discussion Point 1
 
+This section will discuss the creating of a logic query in Ekeko for Discussion Point 1, executed on the `DesignPatterns` folder.
 
 == Abstract & Extending
 
 
-The first step in the logic query is retrieving all abstract & extending classes. The method named `get-abstract-and-extending-classes` is responsible for this, the complete method can be found in @method-abstract-extending.
+The first step in the logic query is retrieving all abstract & extending classes (`get-abstract-and-extending-classes`), the complete method can be found in @method-abstract-extending.
 
-The first step is retrieving all ast nodes of `:TypeDeclaration` and define this as the `extending` class. Retrieve the type of the declaration and check if the type is a class, @retrieve-extending.
+The first step is retrieving all the ast nodes of type `:TypeDeclaration` and define this as the `extending` class.
+For each ast node, retrieve the type of the declaration and check if the ast-node is a class-type, shown in  @retrieve-extending.
 
 
 #figure(
@@ -107,7 +107,7 @@ The first step is retrieving all ast nodes of `:TypeDeclaration` and define this
 ) <retrieve-extending>
 
 
-After the type of the class is retrieved, check that the extending class is not defined as an abstract class, @extending-not-abstract.
+After the type of the ast-node is known to be a class-type, check that the extending class is not defined as an abstract class, @extending-not-abstract.
 
 #figure(
   zebraw(
@@ -125,25 +125,19 @@ After the type of the class is retrieved, check that the extending class is not 
 
 == Checking methods
 
-After the list of abstract and extending classes is generated, continue to the method to refine the results by filtering on methods.
+The list of abstract and extending class, is refined by filtering the results based on methods defined on the pair of abstract & extending class. Filtering is performed on both classes, this action is done by the `check-methods` method, which can be found in full in @check-methods.
 
-Filtering of the on both types of classes is done by the `check-methods`  method, which can be found in full in @check-methods.
-
-The inner of the method is surrounded with a `one` & `all`.
-
-Start by iterating the method declerations in the body using the method: `typedeclaration-method`, which retrieves all the `:bodyDeclerations` (=methods) in the body of the class, can be found in @bodydeclerations.
+The core of the method is surrounded by the logic operations: `one` & `all`, declaring that one valid result is required and all perations must succeed for all declared. The list of method declarations in a class is retrieved by using the logic query: `typedeclaration-method`, it retrieves all the `:bodyDeclarations` (methods) in the body of the given class, it can be found in @bodydeclarations
 
 
 
 === Abstract method
 
-The next step is checking if the retrieve method is an abstract method, the full method can be found in @is-abstract-method.
+Validating the retrieved method is an abstract method is the next step in finding Template Method patterns, the complete method can be found in @is-abstract-method.
 
 ==== Method Body
 
-The first step is checking what the content of the body of the method is, according to the pattern definition, a abstract method should be empty.
-
-The code can be found in @abstract-body, since the actual Java code can be two different examples as illustrated in @abstract-body-example.
+According to the pattern definition, the body of an abstract method must be empty. Java allows for multiple definitions of abstract methods as illustrated in @abstract-body-example. Detecting these two different examples must be managed and are explained in @abstract-body.
 
 #linebreak()
 #figure(
@@ -158,7 +152,10 @@ The code can be found in @abstract-body, since the actual Java code can be two d
   caption: [Java method examples],
 ) <abstract-body-example>
 
-For the first type the Ekeko `body` property will have the `null` type. The second type requires more code, first check the body is not null, by performing a `fail` check. Than retrieve the `statements` property value from the body (the actual expressions). Transform the list to its raw value using `value-raw`. Lastly check the list of statements is empty (count = 0).
+The first type of empty body can be detected in a Ekeko logic query by checking if the `body` property of a method has the `null` type.
+
+The other type of empty body declaration requires a bit more code. Starting with a `fails` check, the first case is excluded. Following that, the `statements` property is retrieved from the body of the method, which is the list of expressions inside the body of the method. The list of statements is transformed to its raw value using: `value-raw`. Finally, the list of statements is checked to be empty: `(equals 0 (count ?raw))`.
+
 
 #linebreak()
 #figure(
@@ -185,10 +182,11 @@ For the first type the Ekeko `body` property will have the `null` type. The seco
 
 ==== Method Modifiers
 
-Next check the modifiers on the method, in @abstract-modifiers. There are two different types of conditions;
-- public & abstract;
+Continuining from the body of the methods, the next part is checking the list of modifiers on the respective methods in @abstract-modifiers. Following the pattern definition, there are two scenarios of possible modifier combinations for abstract methods:
+- public & abstract
 - protected.
 
+The list of modifiers is retrieved, and the two scenarios are detected by using a `conde`.
 
 #linebreak()
 #figure(
@@ -218,14 +216,13 @@ That concludes the code required for checking if a method is an abstract method.
 
 === Overriding method
 
-The following step is retrieving the overriding method associated with the abstract method, the auxilary method used for this is named: `is-overriding-method` and can be fully found in @is-overriding-method.
+For each abstract method there is an associated overriding method, detecting such a method is done by the method: `is-overriding-method`, the full Implementation can be found in @is-overriding-method.
 
-
-This information can be retrieved by using the build-in Ekeko method: `(methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)`.
+Retrieving the connected overriding method with each abstract method is done by using the built Ekeko logic query: `(methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)`. For either grounded value, Ekeko will retrieve the accompaying method, in this case the `overrider-method`.
 
 ==== Class
 
-After the method is retrieved, retrieve the class associated with the method, reuse the `typedecleration-method` defined earlier, @overriding-query.
+Each retrieved method is checked so that it belongs to the `extending` class found earlier. For this the `typedeclaration-method` defined earlier is reused, code can be found in @overriding-query.
 
 
 #linebreak()
@@ -245,7 +242,7 @@ After the method is retrieved, retrieve the class associated with the method, re
 
 ==== Method Body
 
-Next the body of the method must be `null`, the code for this can be found in @overriding-body. Retrieve the body of the method using the `:body` property value. After the body is returned, check the body is not null by using a `fails`.
+For each overriding method, it's body cannot be empty or `null`, the code for this can be found in @overriding-body. Retrieve the body of the method using the `:body` property value. After the body is returned, check the body is not null by using a `fails`.
 
 #linebreak()
 #figure(
@@ -284,12 +281,11 @@ The final check for the overriding method is checking the modifiers defined on t
 
 === Overrider & Template Method
 
-Following step checks if the `overrider-method` is present in the `template-method` of the `abstract-class`. Surround the query with a `one` for the `?template-method` value.
+This step checks if the `overrider-method` is present in the `template-method` of the `abstract-class`. Surround the query with a `one` for the `?template-method` value.
 
 Retrieve a method decleration from the abstract class, first check if the name is not the same as the `abstract-method` retrieved earlier. This is done by retrieving the `:name` property on both respective methods. Proceed to check if comparison of name fails.
 
 If that is the case, check if the method is a template method using `is-template-method`, the full code of the method can be found in @is-template-method.
-
 
 
 #linebreak()
@@ -320,9 +316,9 @@ If that is the case, check if the method is a template method using `is-template
 
 ==== Template Method
 
-The full `is-template-method` can be found in @is-template-method. The method is responsible for checking if the method decleration is a template-method. A template method has to adhere to the following criteria. It must be a public method and cannot contain any other modifiers. The body of the method is also not allowed to be public.
+The pattern defintion declares a 'Template Method' to adhere to the following properties: must be a public method, no other modifiers are allowed; the body of the method must also not be empty. Since this is the method that defines the steps of the algorithm, which are the abstract methods defined earlier, and which are later overriden by methods in the extending class. The name of the implementation method is: `is-template-method` and can be found in full in @is-template-method.
 
-In code this translates to the following, first checking the list of modifiers on the method as show in @is-template-method-modifiers.
+The first step of checking if a given method is a template method is by validating the list of modifiers, the method must be public and cannot contain any other modifiers, code can be found in @is-template-method-modifiers.
 
 #linebreak()
 #figure(
@@ -343,9 +339,9 @@ In code this translates to the following, first checking the list of modifiers o
   caption: [Modifier check on the template method.],
 ) <is-template-method-modifiers>
 
-Retrieve the `:modifiers` property from the method using the `has` query. Retrieving a value for the `public` modifier using `modifier|public` to than check using `contains` if the value is present in the list of modifiers. The length of the list of `modifiers` is also checked to see if it's length is 1, only containing the `public` modifier.
+Retrieve the `:modifiers` property from the method using the `has` query. Retrieving a value for the `public` modifier using `modifier|public` to than check using `contains` if the value is present in the list of modifiers. The length of the list of `modifiers` is also checked to see if it's length is 1, e.g: only contains the `public` modifier.
 
-After the modifiers are checked, checking if the body of the method is not empty is done as illustrated in @is-template-method-body.
+After the modifiers are checked, validating if the body of the method is not empty is in @is-template-method-body.
 
 #linebreak()
 #figure(
@@ -361,7 +357,9 @@ Validating if a method is a template method in the sense is not complete without
 
 === Algorithm Step
 
-The complete `is-algorithm-step` method can be found in @is-algorithm-step. The method starts of with retrieving the name of the `overrider-method` element, the `:statements` property is also retrieved from the `template-body`, as illustrated in @is-algorithm-step-statements.
+Pattern definition declares that there must be at least one template method per pattern implementation @Design_Patterns. Thus the purpose of this method named: `is-algorithm-step` which can be found in full in @is-algorithm-step, is to check the supposed template method for presence of each of the abstract<=>overriding method pair.
+
+The method starts of with retrieving the name of the `overrider-method` method, the `:statements` property is also retrieved from the `template-body`, as illustrated in @is-algorithm-step-statements.
 
 #linebreak()
 #figure(
@@ -417,9 +415,7 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 // #pagebreak()
 = Discussion Point 2
 
-When running the resulting query of Discussion Point 1 *exactly*, on the `JhotDraw` folder, there are no results.
-
-To gather more results, part of the query was removed/commented out.
+Executing the query defined in Discsussion Point 1, without modification on the `JhotDraw` folder, results in no results. To gather more results, part of the query was removed/commented out.
 
 == Comparison
 
@@ -563,7 +559,7 @@ No further refined of the query was performed for discussion point 2.
     ```,
   ),
   caption: [Retrieves all method declerations from a given class.],
-) <bodydeclerations>
+) <bodydeclarations>
 
 
 #linebreak()
