@@ -83,6 +83,107 @@
 
 == Implementation
 
+=== Asserts
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    case ABinaryOp(GreatThan, id: AIdentifier, ANumber(i, _), _) => {
+      val xDecl = id.declaration
+      // Get the interval for the declaration
+      val old = s(xDecl)
+      // Create the new interval by applying (zero is ignored?)
+      val newInterval = widenInterval(old, (i, 0))
+      // Update with the new interval
+      s.updated(xDecl, newInterval)
+    }
+    ```,
+  ),
+  caption: [Assert - Version 1],
+) <program-assert-1>
+
+
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    case ABinaryOp(GreatThan, id: AIdentifier, ANumber(i, _), _) => {
+      val xDecl = id.declaration
+      // Get the interval for the declaration
+      val old = s(xDecl)
+      // Create the new interval by applying (zero is ignored?)
+      val newInterval = widenInterval(old, (i, 0))
+      // Update with the new interval
+      s.updated(xDecl, newInterval)
+    }
+    ```,
+  ),
+  caption: [Assert - Version 2],
+) <program-assert-2>
+
+
+=== Widen Interval
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    case ((l1, h1), (l2, h2)) => {
+      IntervalLattice.intersect((l1, h1), (l2, IntervalLattice.PInf))
+    }
+    ```,
+  ),
+  caption: [widenInterval],
+) <program-wideninterval>
+
+
+
+=== Assignment(s)
+
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // var declarations
+    // ⟨vi⟩= JOIN(vi)
+    case varr: AVarStmt => {
+      varr.declIds.foldLeft(s) { (state, decl) =>
+        state.updated(decl, valuelattice.top)
+      }
+    }
+    ```,
+  ),
+  caption: [Declarations],
+) <program-delcarations>
+
+
+
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // assignments
+    // ⟨vi⟩= ⟨x=E⟩= JOIN(vi)[x ↦ eval(JOIN(vi), E)]
+    case AAssignStmt(id: AIdentifier, right, _) => {
+      val interval = eval(right, s)
+      s.updated(id, interval)
+    }
+    ```,
+  ),
+  caption: [Declaration],
+) <program-delcaration>
+
+
+
 
 == Results
 
@@ -100,7 +201,59 @@ Question(s): What would be the most precise result? Why does the analysis lose p
 = Discussion Point 2
 
 
+
+
 == Implementation
+
+
+
+=== Context
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    // MOD-DP2
+    def makeLoopContext(c: CallStringContext, n: CfgNode, x: statelattice.Element): CallStringContext = {
+      // Add node to call string context, while maintaining limit on context length
+      CallStringContext((n :: c.cs).slice(0, maxCallStringLength))
+    }
+    ```,
+  ),
+  caption: [Loop Context],
+) <loopcontext>
+
+
+
+=== Unrolling
+
+
+// TODO: Update code
+#figure(
+  zebraw(
+    lang: false,
+    ```scala
+    //// Discussion Point 2: COMPLETE HERE
+    // Thus, to determine the starts and ends of loops you must use the cfg.dominators function.
+    case m: CfgStmtNode if loophead(n) => {
+      val node = m.data
+      println("Current Node: " + node.toString)
+      println("Successor Node: " + (m.succ intersect dominators(m)).head.data)
+
+      val loopStart = (m.succ intersect dominators(m)).head
+      val newContext = makeLoopContext(currentContext, loopStart, s)
+      println("Context: " + newContext)
+      println("S: " + s)
+
+      propagate(s, (newContext, m))
+
+      s
+    }
+    ```,
+  ),
+  caption: [Loop Unrolling],
+) <loopunrolling>
 
 
 
