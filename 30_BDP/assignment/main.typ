@@ -88,7 +88,7 @@
 #colbreak()
 = Intro
 
-This report will discuss an implementation for the assignment "Project: Traffic Prediction" for the course: Big Data Processing. First the implementation itself will be discussed in section @implementation. Following that, answers to the required questions in section @discussion. And lastly a small section on performance benchmarks in section @benchmarks.
+This report will discuss an implementation for the assignment "Project: Traffic Prediction" for the course: Big Data Processing. First, the implementation itself will be discussed in section @implementation. Following that, answers to the required questions in section @discussion. And lastly, a small section on performance benchmarks in section @benchmarks.
 
 
 = Implementation <implementation>
@@ -98,7 +98,7 @@ This section will discuss the implementation (code) for the project. Full projec
 
 == Overview
 
-All the code can be found in the `traffic` package of the `bdp-traffic` folder. The `traffic` package consists of the following files:
+All the files can be found in the `traffic` package of the `bdp-traffic` folder. The `traffic` package consists of the following files:
 - `Traffic.scala`
 - `TrafficLoader.scala`
 - `TrafficJoiner.scala`
@@ -106,12 +106,12 @@ All the code can be found in the `traffic` package of the `bdp-traffic` folder. 
 - `TrafficTransformer.scala`
 - `TrafficPredictor.scala`
 
-The order of the file is in which they are structured & applied to the input. Each file also has it's own logger variable set, which is used for logging, for this the `build.sbt` file was modified with an additional package. Each step/class in the pipeline receives a reference to the `SparkSession` by the `spark` variable.
+The files are structurd in the ordered in which they are applied to the input.Each file also has its own logger variable set, which is used for logging. For this, the `build.sbt` file was modified with an additional package. Each class in the pipeline receives a reference to the `SparkSession` by the `spark` variable.
 
 
 == `Traffic.scala`
 
-This is the file that is executed when the project is ran, it executes the different steps (files) in a kind of pipeline. The complete pipeline can be seen in listing: @execution-pipeline.
+This is the file that is executed when the project is ran. It executes the different steps (files) in pipeline manner. The complete execution pipeline can be seen in listing: @execution-pipeline.
 
 
 #figure(
@@ -122,7 +122,7 @@ This is the file that is executed when the project is ran, it executes the diffe
 
 == Loader
 
-The loader or `TrafficLoader.scala` file is responsible for loading the correct data set files. For this 3 different methods are created for each type of file: `loadVolume`, `loadSpeed` and `loadFeatures`. Loading the correct file is done based on the `dataset` value which is a enum, as shown in listing
+The loader or `TrafficLoader.scala` file is responsible for loading the correct data set files. For this 3 different methods are created for each type of file: `loadVolume`, `loadSpeed` and `loadFeatures`. Loading the correct file is done based on the `dataset` value which is an enum, as shown in listing
 
 #figure(
   zebraw(
@@ -138,36 +138,36 @@ The loader or `TrafficLoader.scala` file is responsible for loading the correct 
   ),
 )
 
-This way, if different datasets are required to be used/tested this can be easily extended. In the `Traffic.scala` file, each dataframe is seperately loaded and stored in a dataframe.
+This way, if different datasets are required to be tested this can be easily extended. In the `Traffic.scala` file, each dataframe is seperately loaded and stored in a dataframe.
 
 
 == Joiner
 
-In this step of the pipeline the 3 dataframes are unpivotted & joined together to create one big dataframe, for application of time-series values in next step.
+In this step of the pipeline, the 3 dataframes are unpivotted & joined together to create one big dataframe, for application of time-series values in next step.
 
 === Features <features>
 
 This step in the pipeline is responsible for joining the different data files in one melted dataframe.
 
-First start by adding a `id` column to the features dataframe. For this accessing the `rdd` of the dataframe. This is done using a `zipWithIndex` and a `map`, doing it this way ensures a correct assigning of id's over partitions @spark_apache_id @stack_overflow_id. After adding the id column, the rdd is transformed back into a dataframe.
+First, start by adding an `id` column to the features dataframe. For this the RDD of the dataframe is accessed. This is done using a `zipWithIndex` and a `map`. This ensures a consisting numerically ordered id, over different partitions @spark_apache_id @stack_overflow_id. After adding the id column, the RDD is transformed back into a dataframe.
 
 === Speed & Volume
 
-The following operations are identical for both dataframes: `speed` & `volume`. Each dataframe is unpivotted, from a wide format to a long format. For this the sql method `stack` is used.
+The following operations are identical for both dataframes: `speed` & `volume`. Each dataframe is unpivotted, from a wide format to a long format. For this, the sql method `stack` is used.
 
-After the respective dataframe is unpivotted, the `node` column is updated to a `int` type, by removing the `node_` from the column name and casting it to an `int` value, so it is supported in a Vector Assembler.
+After the respective dataframe is unpivotted, the `node` column is updated to a `int` type, by removing the `node_` from the column name and casting it to an `int` value. This allows the column to be used as a feature when applying the Vector Assembler.
 
 
 === Joining
 
-The speed & volume dataframes are joined on the `node` & `timestamp` columns, for an `inner` join operation. From the features dataframe, a select list of columns is selected bassed on assumption of relevancy for prediction model.
+The speed & volume dataframes are joined on the `node` & `timestamp` columns, for an `inner` join operation. From the features dataframe, a select list of columns is selected based on assumption of relevancy for the prediction model.
 
-Finally the selected features dataframe is joined with the earlier speed & volume dataframe on `node` column value.
+Finally, the selected features dataframe is joined with the earlier speed & volume dataframe on `node` column value.
 
 
 == Time-Series
 
-This section will describe which time-series features where added to the dataframe.
+This section will describe which time-series features were added to the dataframe.
 
 === Lag
 
@@ -182,18 +182,20 @@ The default value chosen for the lag is $0$, since this value works better with 
 
 A rolling window of half an hour and 1 hour was added for both the speed & volume metric.
 
-At the end of the updated dataframe, the operation to replaced all `null` values with zero is applied, prevents any issues with prediction model is next steps.
+At the end of the updated dataframe, the operation to replace all `null` values with zero is applied, this prevents any issues with the prediction model in subsequent steps.
 
 
 == Transformer
 
 This step of the pipeline will apply the Vector Assembler to the selected columns to create a `features` column, so the model can be trained on it.
 
-The Vector Assembler is first applied to a sequences of selected columns, with the output name of the column being: `features`. After the features column is generated the additional rows for each node is created.
+The Vector Assembler is first applied to a sequences of selected columns, with the output name of the column being: `features`. After the features column is generated, additional rows for each node are added.
 
-For this first retrieve the latest timestamp from the dataframe and parse into correct Java type. Using a map, create a dataframe consisting of 6 rows and one column named: `timestamp`. Proceed to select the columns `node` & `features` and apply the distinct operation.
+The oldest timestmap from the existing dataframe is retrieved an parsed into the correct Java type. Starting from the oldest timestamp, 6 additional timestamp values are generated by manner of a `map` and cast to a dataframe consisting of 6 rows and a single column named: `timestamp`.
 
-Using `crossJoin`, with the nodes dataframe & timestamp dataframe, a dataframe with for each relation of node & feature value 6 additional timestamp rows are created. Also add the `speed` column with default value of $0$.
+Proceed to select the columns `node` & `features` and apply the distinct operation.
+
+The two dataframes consisting of the distinct nodes & features & timestamps are joined together by using the `crossJoin` operation. For each distinct relation of a node & feature, 6 additional timeestamp rows are created. One additional row named: `speed` is added with default value of: $0$.
 
 From the dataframe vector, select the columns: `timestamp`, `node`, `speed` and `features`. Proceed to apply the `unionByName` operation on this dataframe and the previously generated dataframe. This concludes the steps for preparing the data for model prediction.
 
@@ -202,9 +204,9 @@ Return the final dataframe and largest timestamp from the original data as a tup
 
 == Predictor
 
-The prepared data can now be split in training data and 'test' data, this is done by filter on the value of the timestamp column. All rows with an equal of lower timestamp value are training data, while larger timestamps are the prediction data, that was generated in the previous step.
+The data can now be split in training data and 'test' data. The data datafarme is split by applying a filter on the value of the timestamp column. All rows with an equal or lower timestamp value are considered training data, while larger timestamps are the prediction data.
 
-The `RandomForestRegressor` model is created, with the label column: `speed` & features column: `features`. Other values are left default. The model is fitted on the training dataframe (`trainDF`). The generated model is writen to file as described in the assignment.
+The `RandomForestRegressor` model is created, with the label column: `speed` & features column: `features`. Other values are left default. The model is fitted on the training dataframe (`trainDF`). The generated model is written to file as described in the assignment.
 
 Lastly, the model is applied to the prediction dataframe (`predictionDF`) to predict future speeds.
 
@@ -212,7 +214,7 @@ Lastly, the model is applied to the prediction dataframe (`predictionDF`) to pre
 
 The result of the prediction is returned to the `Traffic.scala` file. The generated prediction data (`predictions`) is passed to the `writeFile` method, which is responsible for printing and (maybe) writing output to a file.
 
-The generated data frame is iterated and the values for each timestamp are writen per line, with values being the speed for each node. If required, a boolean: `file` can be set to write the output to a file.
+The generated data frame is iterated and the values for each timestamp are written per line, with values being the speed for each node. If required, a boolean: `file` can be set to write the output to a file.
 
 = Discussion <discussion>
 
@@ -221,13 +223,12 @@ The generated data frame is iterated and the values for each timestamp are write
 
 *Question*: Have you persisted some of your intermediate results? Why could persisting your data in memory be helpful for this pipeline?
 
-Based on the benchmarks performed in section @benchmarks, the answer to this question, is that persisting data for this pipeline has a negative effect. Possible reasons for this is the fact, that the used dataset is quit small in comparison to the full dataset(s) available. A proper conclusion cannot be made without further testing.
+Based on the benchmarks performed in section @benchmarks, the answer to this question is, that persisting data for this pipeline has a negative effect. Possible reasons for this is the fact, that the used dataset is quit small in comparison to the full dataset(s) available. A proper conclusion cannot be made without further testing.
 
 
 == Question 2
 
-*Question 2:* In which parts of your implementation have you used partitioning? Did this impact perfor
-mance? If so,why?
+*Question 2:* In which parts of your implementation have you used partitioning? Did this impact performance? If so,why?
 
 // TODO: Add!
 *TODO*
@@ -237,18 +238,18 @@ mance? If so,why?
 
 *Question 3*: Which datastructure(s) does your implementation use: RDDs,DataFrames,orDatasets? Please motivate your choice.
 
-The implementation makes mostly use of the dataframes, since these, as seen in clase have the best performance optimization enabled under the hood. For reasoning on why RDD's where used in one specific section please see: @features.
+The implementation makes mostly use of the dataframes, since these, as seen in clase have the best performance optimization enabled under the hood. For reasoning on why RDD's were used in one specific section please see: @features.
 
 == Question 4
 
 *Question 4:*  Which predictive algorithm did you use and why?
 
-The chosen predicate model is: `RandomForestRegressor`, since this is what was recommend in the FAQ section of the assignment. No time was available for testing other models.
+The chosen predicate model is: `RandomForestRegressor`, since this is what was recommend in the FAQ section of the assignment.
 
 
 = Benchmarks <benchmarks>
 
-For all benchmarks, 4 runs where done, the first one was considered a dry run and proceeding 3, the average was taken.
+For all benchmarks, 4 runs were done. The first run was considered a dry run, while for the  proceeding 3, the average was taken.
 
 For the types of benchmarks ran on each host on the local context, both used the same provided dataset:
 - Type 1: No cache/persist & other default settings
@@ -263,10 +264,9 @@ For the types of benchmarks ran on each host on the local context, both used the
 #table(
   columns: (1fr, 1fr),
   [*Part*], [*Value*],
-  [CPU], [M2 Pro],
+  [CPU], [M2 Pro (6 performance and 4 efficiency)],
   [RAM], [16GB],
-  // TODO: Add
-  [OS], [*ADD*],
+  [OS], [MacOS 15.7.2 (24G325)],
 )
 
 
@@ -277,10 +277,9 @@ For the types of benchmarks ran on each host on the local context, both used the
   columns: (1fr, 1fr),
   [*Part*], [*Value*],
   [CPU], [Ryzen 9 5950X],
-  [RAM], [64GB],
-  // TODO: Add
+  [RAM], [64GB (3200Mhz)],
   [OS],
-  [Versie	10.0.22631 Build 22631
+  [Windows Versie	10.0.22631 Build 22631
   ],
 )
 
@@ -295,8 +294,10 @@ For the types of benchmarks ran on each host on the local context, both used the
 
 #lq.diagram(
   title: [Performance],
+  legend: (position: bottom + right),
   xlabel: "Type",
   ylabel: "Time (Seconds)",
+
 
   xaxis: (ticks: xs.zip(labels)),
 
