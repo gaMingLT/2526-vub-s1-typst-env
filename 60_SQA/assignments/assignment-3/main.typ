@@ -80,25 +80,32 @@
 #pagebreak()
 = Discussion Point 1
 
+This subsection will discuss the implementation of the first discussion point.
 
 == Implementation
 
+
+
 === Asserts
+
+
+For both the asserts shown in @program-assert-1 & @program-assert-2, retrieve the declaration of the binary operation. Retrieve by using the declaration from `s` the old interval. Using the `widenInterval` operation a new interval is created, passing the `old` interval to it, with the second argument: `(i, PInf)`.
+
 
 // TODO: Update code
 #figure(
   zebraw(
     lang: false,
     ```scala
-    case ABinaryOp(GreatThan, id: AIdentifier, ANumber(i, _), _) => {
-      val xDecl = id.declaration
+    // x >= value
+    case ABinaryOp(GreatThan, id: AIdentifier, ANumber(i, _), _) =>
+       val xDecl = id.declaration
       // Get the interval for the declaration
       val old = s(xDecl)
       // Create the new interval by applying (zero is ignored?)
-      val newInterval = widenInterval(old, (i, 0))
+      val newInterval = widenInterval(old, (i, PInf))
       // Update with the new interval
       s.updated(xDecl, newInterval)
-    }
     ```,
   ),
   caption: [Assert - Version 1],
@@ -111,15 +118,15 @@
   zebraw(
     lang: false,
     ```scala
-    case ABinaryOp(GreatThan, id: AIdentifier, ANumber(i, _), _) => {
-      val xDecl = id.declaration
-      // Get the interval for the declaration
-      val old = s(xDecl)
-      // Create the new interval by applying (zero is ignored?)
-      val newInterval = widenInterval(old, (i, 0))
-      // Update with the new interval
-      s.updated(xDecl, newInterval)
-    }
+     // value >= number
+     case ABinaryOp(GreatThan, ANumber(i, _), id: AIdentifier, _) =>
+        val xDecl = id.declaration
+        // Get the interval for the declaration
+        val old = s(xDecl)
+        // Create the new interval by applying (zero is ignored?)
+        val newInterval = widenInterval(old, (i, MInf))
+        // Update with the new interval
+        s.updated(xDecl, newInterval)
     ```,
   ),
   caption: [Assert - Version 2],
@@ -127,6 +134,8 @@
 
 
 === Widen Interval
+
+As stated on the slides, the `gt` operation is  the application of the intersect operation on the the list of 4 four values, as shown in @program-wideninterval.
 
 // TODO: Update code
 #figure(
@@ -145,6 +154,7 @@
 
 === Assignment(s)
 
+For the list of assignments, iterate the list of declared ids, and update the state of the declared id with the top value.
 
 // TODO: Update code
 #figure(
@@ -152,7 +162,7 @@
     lang: false,
     ```scala
     // var declarations
-    // ⟨vi⟩= JOIN(vi)
+    // ⟨vi⟩= ⟨x=E⟩= JOIN(vi)[x ↦ eval(JOIN(vi), E)]
     case varr: AVarStmt => {
       varr.declIds.foldLeft(s) { (state, decl) =>
         state.updated(decl, valuelattice.top)
@@ -164,7 +174,7 @@
 ) <program-delcarations>
 
 
-
+Create a new interval by applying the `eval` function on the element. Update the interval by using the id and setting the new interval value.
 
 // TODO: Update code
 #figure(
@@ -172,7 +182,7 @@
     lang: false,
     ```scala
     // assignments
-    // ⟨vi⟩= ⟨x=E⟩= JOIN(vi)[x ↦ eval(JOIN(vi), E)]
+    // ⟨vi⟩= JOIN(vi)
     case AAssignStmt(id: AIdentifier, right, _) => {
       val interval = eval(right, s)
       s.updated(id, interval)
@@ -186,6 +196,15 @@
 
 
 == Results
+
+
+// TODO: Update image
+#figure(
+  image(
+    "images/interval.png",
+  ),
+  caption: [Interval Analysis Result],
+) <interval-results>
 
 
 == Analysis Precision
@@ -209,6 +228,8 @@ Question(s): What would be the most precise result? Why does the analysis lose p
 
 === Context
 
+The loop context is created just as the returncontext is, append the call string context to the existing context and the the k latest context, and discard the rest.
+
 // TODO: Update code
 #figure(
   zebraw(
@@ -228,6 +249,9 @@ Question(s): What would be the most precise result? Why does the analysis lose p
 
 === Unrolling
 
+Dedecting loop head & start is done by using the loophead method, the n value is passed to it. If it returns true, retrieve the node for which it matched. Retrieve the loophead by taking the head of the result of the operation  the done in the loopehead method. Create a new context, by passing the values to the function shown in @loopcontext. Use the currentContext, loopStart and s as values.
+
+The newly created context is progated, by using the progate method, passing the s as the lattice value, in conjunction with the newContext and AstNode for which the if matched.
 
 // TODO: Update code
 #figure(
@@ -238,14 +262,8 @@ Question(s): What would be the most precise result? Why does the analysis lose p
     // Thus, to determine the starts and ends of loops you must use the cfg.dominators function.
     case m: CfgStmtNode if loophead(n) => {
       val node = m.data
-      println("Current Node: " + node.toString)
-      println("Successor Node: " + (m.succ intersect dominators(m)).head.data)
-
       val loopStart = (m.succ intersect dominators(m)).head
       val newContext = makeLoopContext(currentContext, loopStart, s)
-      println("Context: " + newContext)
-      println("S: " + s)
-
       propagate(s, (newContext, m))
 
       s
@@ -258,6 +276,15 @@ Question(s): What would be the most precise result? Why does the analysis lose p
 
 
 == Results
+
+
+// TODO: Update image
+#figure(
+  image(
+    "images/interval-loop.png",
+  ),
+  caption: [Interval Loop Unrolling Analysis Result],
+) <interval-loop-results>
 
 
 
