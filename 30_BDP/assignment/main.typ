@@ -219,13 +219,31 @@ For the transformation step during the prediction phase of the pipeline, the `Ve
 
 == Predictor
 
+A flowchart visualiation of the steps taken during predictor phasse of the pipeline can be found in @prediction-flowchart, a legend is available in @prediction-legend.
+
+#figure(
+  image(
+    "images/BDP-Prediction.pdf"
+),
+  caption: [Prediction Step Flowchart]
+) <prediction-flowchart>
 
 
-// The data can now be split in training data and 'test' data. The data datafarme is split by applying a filter on the value of the timestamp column. All rows with an equal or lower timestamp value are considered training data, while larger timestamps are the prediction data.
-//
-// The `RandomForestRegressor` model is created, with the label column: `speed` & features column: `features`. Other values are left default. The model is fitted on the training dataframe (`trainDF`). The generated model is written to file as described in the assignment.
-//
-// Lastly, the model is applied to the prediction dataframe (`predictionDF`) to predict future speeds.
+The `RandomForestRegressor` model is created, with the label column: `speed` & features column: `features`. Other values are left default. The model is fitted on the training dataframe (`trainingDF`). The generated model is written to file as described in the assignment.
+
+From the given latest timestamp (`endTime`), 6 future values are generated. The list of future timestamps is iterated.
+
+During iteration, the additional rows are created by adding the `timestamp`, `speed` and `volume` columns to the `nodeFeaturesDF`. The future rows are added to the historical dataframe (`dataDF`) by using `unionByName`.  The time-series columns are created by applying the `addTimeSeries` method on the dataframe. Once the time-seriese columns have been added, the features columns is generated.
+
+With the prepartion phase complete, the prediction can be done by applying the `transformedDF` to the `rf_model`. The result dataframe contains a `prediction` column, containing the prediction for the speed of each node on that particular timestamp.
+
+To include the predicted speed value in further prediction of speed for time-series features, the rows containing the current `timestamp` have their speed (originally $0$) set to the value in the `prediction` column (predicted value).
+
+Lastly, the historically data is updated, by removing one row from the original dataset and including the new row with predicted speed, by applying the `takeHistory` method on the  `updateDF` dataframe. The result of this application is put in the mutable variable: `dataDF`, which is continuously updated during the iteration.
+
+
+After the predictions, the predicted rows are selected by filtering out all the rows that have a timestamp that is lower than the `endtime`. On the `predictions` dataframe, the `unpivot` operation is applied, so the dataframe is in correct format for displaying information in the terminal.
+
 
 == Output
 
@@ -254,7 +272,7 @@ Based on the benchmarks performed in section @benchmarks, the answer to this que
 
 == Question 3
 
-*Question 3*: Which datastructure(s) does your implementation use: RDDs,DataFrames,orDatasets? Please motivate your choice.
+*Question 3*: Which datastructure(s) does your implementation use: RDDs, DataFrames, or Datasets? Please motivate your choice.
 
 The implementation makes mostly use of the dataframes, since these, as seen in clase have the best performance optimization enabled under the hood. For reasoning on why RDD's were used in one specific section please see: @features.
 
@@ -266,6 +284,8 @@ The chosen predicate model is: `RandomForestRegressor`, since this is what was r
 
 
 = Benchmarks <benchmarks>
+
+// TODO: Update benchmarks
 
 // For all benchmarks, 4 runs were done. The first run was considered a dry run, while for the  proceeding 3, the average was taken.
 //
@@ -329,6 +349,14 @@ The chosen predicate model is: `RandomForestRegressor`, since this is what was r
 
 #set page(columns: 1)
 = Appendix <appendix>
+
+
+#figure(
+  image(
+    "images/BDP-Prediction-Legend.pdf"
+),
+  caption: [Prediction Step Flowchart Legend]
+) <prediction-legend>
 
 
 #bibliography("references.bib")
