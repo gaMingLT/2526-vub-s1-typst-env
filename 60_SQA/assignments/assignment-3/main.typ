@@ -312,12 +312,11 @@ Since the bases of functional sensitivity is on the abstract state, it would at 
 
 Continuing from the context with at least variable $i$. The variable $x$, defined in the loop may also be added.
 
-== Question 2
+
+== Functional vs Callstring
 
 *Question*: Write a TIP program where functional loop unrolling improves precision compared to callstring loop unrolling, and explain the difference.
 
-
-*TODO: Add*
 
 === Program
 
@@ -340,6 +339,7 @@ Continuing from the context with at least variable $i$. The variable $x$, define
           x = x - 1;
         }
       }
+      i = input;
     }
 
     return x;
@@ -349,11 +349,12 @@ Continuing from the context with at least variable $i$. The variable $x$, define
 ) <program>
 
 
-*TODO: Add*
-
 === Difference
 
-*TODO: Add*
+Because of the limitations on (k)-callstring loop unrolling, the analysis will lose the relation between the $i % 2 == 0$ on iterations that are larger than k.
+
+In contrast the functional loop unrolling will be able to 'store' this relation for longer, since for each abstract state a new context is created. Thus maintaining the periodic relation of the $i % 2 == 0$ predicate in memory.
+
 
 == Finite
 
