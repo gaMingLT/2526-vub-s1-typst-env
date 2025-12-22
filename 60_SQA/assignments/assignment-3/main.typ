@@ -206,9 +206,20 @@ The results of executing the interval analysis on the `loopproject.tip` example 
 
 *Question(s)*: What would be the most precise result? Why does the analysis lose precision on this program?
 
-*TODO: Most precise result*
+=== Sound Result
+
+The most mathematically sound result for x at the return statement is: $x in [0, 1000]$.
+
+If the input statement at the start of the program declares x to be a negative value, $x$ is immediately set to $0$, that being the lower bound.
+
+For the upper bound, there are statement(s) and control flow, constraining the upper bound of the variable $x$. Once the value of the variable satisfies: $x gt 0$, the variable is incremented while the following is satisfied: $(1000 gt x)$. Once this predicate is not satisfied anymore, the variable is set to $0$. Thus constraining the variable $x$ to the upper bound of $1000$.
 
 
+=== Precision Loss
+
+As described in @principles_of_program_analysis, the widening operator used during the interval analysis, is an over approximation of the least fixed point. Since the original operator as described in @principles_of_program_analysis, did not stabilize or necessarily have a least fixed point. For the example above, this is the upper bound of the interval is $plus infinity$, instead of the sound one: $1000$.
+
+*TODO: More here?*
 
 
 // #colbreak()
@@ -285,8 +296,7 @@ The results of executing the interval analysis with loop unrolling on the `loopp
 ) <interval-loop-results>
 
 
-*TODO: Add*
-
+As is shown in the result of the analysis @interval-loop-results, the interval of the result variable: $x$ is still the same as before namely: $[0, plus infinity]$. There is now a additional context, for which an interval analysis was performed, but the result of the analysis is the same.
 
 
 // #colbreak()
@@ -317,8 +327,8 @@ Continuing from the context with at least variable $i$. The variable $x$, define
     lang: false,
     // numbering: false,
     ```python
-    x = 1;
-    y = input
+    i = 1;
+    x = input
 
     while (i > 0) {
       assert i > 0;
