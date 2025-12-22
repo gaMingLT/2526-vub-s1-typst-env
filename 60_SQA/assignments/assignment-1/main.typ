@@ -75,7 +75,7 @@
 #colbreak()
 = Intro
 
-The assigned pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and @Design_Patterns. All indivual complete methods can be found in the Appendix section @appendix.
+This report will discuss an implementation for the assignment "Assignment 3: Dataflow Analysis" for the course: Software Quality Analysis. The assigned pattern for this assignment is the `Template Method` pattern as described in @Template_method_pattern and @Design_Patterns. All individual methods can be found in the Appendix section @appendix.
 
 
 
@@ -127,7 +127,7 @@ After the type of the ast-node is known to be a class-type, check that the exten
 
 The list of abstract and extending class, is refined by filtering the results based on methods defined on the pair of abstract & extending class. Filtering is performed on both classes, this action is done by the `check-methods` method, which can be found in full in @check-methods.
 
-The core of the method is surrounded by the logic operations: `one` & `all`, declaring that one valid result is required and all perations must succeed for all declared. The list of method declarations in a class is retrieved by using the logic query: `typedeclaration-method`, it retrieves all the `:bodyDeclarations` (methods) in the body of the given class, it can be found in @bodydeclarations
+The core of the method is surrounded by the logic operations: `one` & `all`, declaring that one valid result is required and all operations must succeed for all declared. The list of method declarations in a class is retrieved by using the logic query: `typedeclaration-method`, it retrieves all the `:bodyDeclarations` (methods) in the body of the given class, it can be found in @bodydeclarations
 
 
 
@@ -182,7 +182,7 @@ The other type of empty body declaration requires a bit more code. Starting with
 
 ==== Method Modifiers
 
-Continuining from the body of the methods, the next part is checking the list of modifiers on the respective methods in @abstract-modifiers. Following the pattern definition, there are two scenarios of possible modifier combinations for abstract methods:
+Continuing from the body of the methods, the next part is checking the list of modifiers on the respective methods in @abstract-modifiers. Following the pattern definition, there are two scenarios of possible modifier combinations for abstract methods:
 - public & abstract
 - protected.
 
@@ -218,7 +218,7 @@ That concludes the code required for checking if a method is an abstract method.
 
 For each abstract method there is an associated overriding method, detecting such a method is done by the method: `is-overriding-method`, the full Implementation can be found in @is-overriding-method.
 
-Retrieving the connected overriding method with each abstract method is done by using the built Ekeko logic query: `(methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)`. For either grounded value, Ekeko will retrieve the accompaying method, in this case the `overrider-method`.
+Retrieving the connected overriding method with each abstract method is done by using the built Ekeko logic query: `(methoddeclaration-methoddeclaration|overrides ?abstract-method ?overrider-method)`. For either grounded value, Ekeko will retrieve the accompanying method, in this case the `overrider-method`.
 
 ==== Class
 
@@ -283,7 +283,7 @@ The final check for the overriding method is checking the modifiers defined on t
 
 This step checks if the `overrider-method` is present in the `template-method` of the `abstract-class`. Surround the query with a `one` for the `?template-method` value.
 
-Retrieve a method decleration from the abstract class, first check if the name is not the same as the `abstract-method` retrieved earlier. This is done by retrieving the `:name` property on both respective methods. Proceed to check if comparison of name fails.
+Retrieve a method declaration from the abstract class, first check if the name is not the same as the `abstract-method` retrieved earlier. This is done by retrieving the `:name` property on both respective methods. Proceed to check if comparison of name fails.
 
 If that is the case, check if the method is a template method using `is-template-method`, the full code of the method can be found in @is-template-method.
 
@@ -316,7 +316,7 @@ If that is the case, check if the method is a template method using `is-template
 
 ==== Template Method
 
-The pattern defintion declares a 'Template Method' to adhere to the following properties: must be a public method, no other modifiers are allowed; the body of the method must also not be empty. Since this is the method that defines the steps of the algorithm, which are the abstract methods defined earlier, and which are later overriden by methods in the extending class. The name of the implementation method is: `is-template-method` and can be found in full in @is-template-method.
+The pattern definition declares a 'Template Method' to adhere to the following properties: must be a public method, no other modifiers are allowed; the body of the method must also not be empty. Since this is the method that defines the steps of the algorithm, which are the abstract methods defined earlier, and which are later overridden by methods in the extending class. The name of the implementation method is: `is-template-method` and can be found in full in @is-template-method.
 
 The first step of checking if a given method is a template method is by validating the list of modifiers, the method must be public and cannot contain any other modifiers, code can be found in @is-template-method-modifiers.
 
@@ -350,7 +350,7 @@ After the modifiers are checked, validating if the body of the method is not emp
    (has :body ?template-method ?template-body)
    (fails (value|null ?template-body))
   ```),
-  caption: [Template mehod non-empty body.],
+  caption: [Template method non-empty body.],
 ) <is-template-method-body>
 
 Validating if a method is a template method in the sense is not complete without the next method named: `is-algorithm-step`.
@@ -372,7 +372,7 @@ The method starts of with retrieving the name of the `overrider-method` method, 
   caption: [Method name & body statements.],
 ) <is-algorithm-step-statements>
 
-Each statement in the list of statements is than iterated using `contains`, for each, the name of the invocation expression is compared with the name of the given `overrider-name`. The list of queries is surrouned with a `one`, indicating that at least one match for that particular method must be found in the body of the template method.
+Each statement in the list of statements is than iterated using `contains`, for each, the name of the invocation expression is compared with the name of the given `overrider-name`. The list of queries is surrounded with a `one`, indicating that at least one match for that particular method must be found in the body of the template method.
 
 
 #linebreak()
@@ -415,7 +415,7 @@ All the expected results for the Template Method pattern in the `DesignPatterns`
 // #pagebreak()
 = Discussion Point 2
 
-Executing the query defined in Discsussion Point 1, without modification on the `JhotDraw` folder, results in no results. To gather more results, part of the query was removed/commented out.
+Executing the query defined in Discussion Point 1, without modification on the `JhotDraw` folder, results in no results. To gather more results, part of the query was removed/commented out.
 
 == Comparison
 
@@ -545,7 +545,7 @@ No further refined of the query was performed for discussion point 2.
                     (is-algorithm-step ?template-body ?overrider-method)))))))
     ```,
   ),
-  caption: [Method responsible for checking method declerations on the pair of abstract and extending class.],
+  caption: [Method responsible for checking method declarations on the pair of abstract and extending class.],
 ) <check-methods>
 
 
@@ -558,7 +558,7 @@ No further refined of the query was performed for discussion point 2.
       (child :bodyDeclarations ?class ?method))
     ```,
   ),
-  caption: [Retrieves all method declerations from a given class.],
+  caption: [Retrieves all method declarations from a given class.],
 ) <bodydeclarations>
 
 
@@ -654,7 +654,7 @@ No further refined of the query was performed for discussion point 2.
                      (name|simple-name|simple|same ?overrider-name ?inv-name)))))
     ```,
   ),
-  caption: [Checks the body of the template-method to see if the overrider method is invoced in the body of the method.],
+  caption: [Checks the body of the template-method to see if the overrider method is invoked in the body of the method.],
 ) <is-algorithm-step>
 
 

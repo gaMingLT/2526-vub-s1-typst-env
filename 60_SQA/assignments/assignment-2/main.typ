@@ -78,12 +78,15 @@
 #colbreak()
 = Intro
 
+This report will discuss an implementation for the assignment "Assignment 2: Concolic Testing" for the course: Software Quality Analysis.
 Complete code snippets can be found in the Appendix section @appendix of the respective section.
 
 
 #set page(columns: 1)
 // #colbreak()
 = Discussion Point 1
+
+This section will discuss the results of the first discussion point.
 
 == Manual Execution
 
@@ -354,7 +357,7 @@ and
 #linebreak()
 Found failure sequence for input: $x = 0, z = 0, y = 2640$.
 
-This concludes the concolic testing for this example, other input's can be found but they do not change the behavior of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
+This concludes the concolic testing for this example, other input's can be found but they do not change the behaviour of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
 
 // #colbreak()
 // === Iteration 5
@@ -429,7 +432,7 @@ Dereference is done by matching on `AUnaryOp` & `DerefOp`, retrieving the `Refer
 #colbreak()
 = Discussion Point 2
 
-The modified files are those with starting annotations: `SymbolicValues.scala`, `Interpreter.scala` and `SMTSolver.scala`.
+This section will discuss the implementation of the second discussion point. The modified files are those with starting annotations: `SymbolicValues.scala`, `Interpreter.scala` and `SMTSolver.scala`.
 
 == Implementation
 
@@ -670,7 +673,7 @@ The program execution performed $36$ runs, of which $27$ where successful and $9
 
 = Discussion Point 3
 
-As described in the assignment, two priorities where implemented. Both strategies where implemented in the `ConcolicEngine.scala` file.
+This section will discuss the implementation of the third discussion point. As described in the assignment, two priorities where implemented. Both strategies where implemented in the `ConcolicEngine.scala` file.
 
 == Bread-First Search Priority
 
