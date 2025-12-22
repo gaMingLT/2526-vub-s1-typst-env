@@ -54,13 +54,6 @@
   font-size: 10pt,
 )
 
-// #set text(
-//   // font: "Linux Libertine",
-//   // font: "Font Awesome 6 Brands",
-//   // font: "Roboto",
-//   top-edge: 1em,
-//   bottom-edge: 0em,
-// )
 
 #outline()
 
@@ -75,16 +68,16 @@
 #colbreak()
 = Intro
 
-
+This report will discuss an implementation for the assignment "Assignment 3: Dataflow Analysis" for the course: Software Quality Analysis.
 
 #pagebreak()
 = Discussion Point 1
 
-This subsection will discuss the implementation of the first discussion point.
+This section will discuss the implementation of the first discussion point.
 
 == Implementation
 
-
+This subsection will discuss the implementation for the first discussion point. First, the asserts will be covered present in the `IntervalAnalysis.scala` file. Continuing, the widen interval & assignments will be covered, present in the `ValueAnaylsis.scale` file.
 
 === Asserts
 
@@ -197,6 +190,8 @@ Create a new interval by applying the `eval` function on the element. Update the
 
 == Results
 
+The results of executing the interval analysis on the `loopproject.tip` example file with the following command: `./tip -interval wlrw vubexamples/loopproject.tip` can be seen in @interval-results.
+
 
 // TODO: Update image
 #figure(
@@ -209,26 +204,27 @@ Create a new interval by applying the `eval` function on the element. Update the
 
 == Analysis Precision
 
-Question(s): What would be the most precise result? Why does the analysis lose precision on this program?
+*Question(s)*: What would be the most precise result? Why does the analysis lose precision on this program?
 
 *TODO: Most precise result*
 
 
 
 
-#colbreak()
+// #colbreak()
 = Discussion Point 2
 
-
+This section will discuss the implementation of the second discussion point.
 
 
 == Implementation
 
+This subsection will discuss the implementation for the second discussion point, implementing loop unrolling. The files: `ValueAnalysis.scala` and `CallContext.scala` have both been modified.
 
 
 === Context
 
-The loop context is created just as the returncontext is, append the call string context to the existing context and the the k latest context, and discard the rest.
+The loop context is created just as the return context is, append the call string context to the existing context and the the k latest context, and discard the rest.
 
 // TODO: Update code
 #figure(
@@ -249,9 +245,9 @@ The loop context is created just as the returncontext is, append the call string
 
 === Unrolling
 
-Dedecting loop head & start is done by using the loophead method, the n value is passed to it. If it returns true, retrieve the node for which it matched. Retrieve the loophead by taking the head of the result of the operation  the done in the loopehead method. Create a new context, by passing the values to the function shown in @loopcontext. Use the currentContext, loopStart and s as values.
+Detecting loop head & start is done by using the loophead method, the n value is passed to it. If it returns true, retrieve the node for which it matched. Retrieve the loophead by taking the head of the result of the operation  the done in the loophead method. Create a new context, by passing the values to the function shown in @loopcontext. Use the currentContext, `loopStart` and `s` as values.
 
-The newly created context is progated, by using the progate method, passing the s as the lattice value, in conjunction with the newContext and AstNode for which the if matched.
+The newly created context is propagated, by using the propagate method, passing the `s` as the lattice value, in conjunction with the newContext and `AstNode` for which the if matched.
 
 // TODO: Update code
 #figure(
@@ -277,6 +273,8 @@ The newly created context is progated, by using the progate method, passing the 
 
 == Results
 
+The results of executing the interval analysis with loop unrolling on the `loopproject.tip` example file with the following command: `./tip -interval wlrw vubexamples/loopproject.tip` can be seen in @interval-loop-results.
+
 
 // TODO: Update image
 #figure(
@@ -287,18 +285,22 @@ The newly created context is progated, by using the progate method, passing the 
 ) <interval-loop-results>
 
 
+*TODO: Add*
 
-#colbreak()
+
+
+// #colbreak()
 = Discussion Point 3
 
+This section will discuss the results of the third discussion point.
 
 == Context
 
 *Question*: Which variables would you include in the context for functional loop unrolling?
 
-Since the bases of functional sensitivity is on the abstract state, it would atleast start of with the variable(s) defined in the predicate of the `while` loop. The more variables added to the context that are defined/used inside of the loop the more precision is gained. Increasing the size of the state to be stored in the context, comes with the drawback that performance might be reduced.
+Since the bases of functional sensitivity is on the abstract state, it would at least start of with the variable(s) defined in the predicate of the `while` loop. The more variables added to the context that are defined/used inside of the loop the more precision is gained. Increasing the size of the state to be stored in the context, comes with the drawback that performance might be reduced.
 
-Continuining from the context with atleast variable $i$, variable $x$, defined in the loop may also be added.
+Continuing from the context with at least variable $i$. The variable $x$, defined in the loop may also be added.
 
 == Question 2
 
@@ -351,7 +353,7 @@ Continuining from the context with atleast variable $i$, variable $x$, defined i
 // https://dl.acm.org/doi/fullHtml/10.1145/3230624
 // https://www.cs.ox.ac.uk/people/hongseok.yang/talk/Cambridge13-interproc.pdf
 
-Applying the practice of loop unrolling to functional sensitivity does not change the fact that for some given programs the analysis will *not* terminate. An example for sucha program can be seen in @program-non-terminating.
+Applying the practice of loop unrolling to functional sensitivity does not change the fact that for some given programs the analysis will *not* terminate. An example for such a program can be seen in @program-non-terminating.
 
 // TODO: Check if valid example?
 #figure(
@@ -374,16 +376,6 @@ Applying the practice of loop unrolling to functional sensitivity does not chang
 ) <program-non-terminating>
 
 As with functional sensitivity for each abstract state of the program, in this the `while` loop a new context is generated @spa_interprocedural_analysis @few_lessons_interprocedural_analysis. Unrolling the first iteration of the loop as displayed in the above program, does not terminate for the given program, since the size of the state (on which functional sensitivity based itself) is not finite in this case. Therefore when considering functional sensitivity, the chosen state is to be considered carefully @spa_interprocedural_analysis.
-
-
-// #set page(columns: 1)
-// = Appendix <appendix>
-
-// == Discussion Point 1
-
-// == Discussion Point 2
-
-// == Discussion Point 3
 
 
 
