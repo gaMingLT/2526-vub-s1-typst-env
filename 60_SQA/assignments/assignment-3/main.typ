@@ -82,10 +82,9 @@ This subsection will discuss the implementation for the first discussion point. 
 === Asserts
 
 
-For both the asserts shown in @program-assert-1 & @program-assert-2, retrieve the declaration of the binary operation. Retrieve by using the declaration from `s` the old interval. Using the `widenInterval` operation a new interval is created, passing the `old` interval to it, with the second argument: `(i, PInf)`.
+For both the asserts shown in @program-assert-1 & @program-assert-2, retrieve the declaration of the binary operation. Using the declaration, the old interval is retrieved from the store (`s`). Using the `widenInterval` operation, a new interval is created, passing the `old` interval to it, with the second argument: `(i, PInf)`.
 
 
-// TODO: Update code
 #figure(
   zebraw(
     lang: false,
@@ -128,9 +127,9 @@ For both the asserts shown in @program-assert-1 & @program-assert-2, retrieve th
 
 === Widen Interval
 
-As stated on the slides, the `gt` operation is  the application of the intersect operation on the the list of 4 four values, as shown in @program-wideninterval.
+As stated on the slides @slides_relational_dataflow_analysis, the `gt` operation is the application of the intersect operation on 4 values: `l1`, `h1`, `l2` and `h2`, as shown in @program-wideninterval.
 
-// TODO: Update code
+
 #figure(
   zebraw(
     lang: false,
@@ -212,14 +211,12 @@ The most mathematically sound result for x at the return statement is: $x in [0,
 
 If the input statement at the start of the program declares x to be a negative value, $x$ is immediately set to $0$, that being the lower bound.
 
-For the upper bound, there are statement(s) and control flow, constraining the upper bound of the variable $x$. Once the value of the variable satisfies: $x gt 0$, the variable is incremented while the following is satisfied: $(1000 gt x)$. Once this predicate is not satisfied anymore, the variable is set to $0$. Thus constraining the variable $x$ to the upper bound of $1000$.
+The upper bound is constrained by several control flow & program statements for the variable $x$. Once the value of the variable satisfies: $x gt 0$, the variable is incremented while the following is satisfied: $(1000 gt x)$. Once this predicate is not satisfied anymore, the variable is set to $0$. Thus constraining the variable $x$ to the upper bound of $1000$.
 
 
 === Precision Loss
 
-As described in @principles_of_program_analysis, the widening operator used during the interval analysis, is an over approximation of the least fixed point. Since the original operator as described in @principles_of_program_analysis, did not stabilize or necessarily have a least fixed point. For the example above, this is the upper bound of the interval is $plus infinity$, instead of the sound one: $1000$.
-
-*TODO: More here?*
+As described in @principles_of_program_analysis, the widening operator used during the interval analysis is an over approximation of the least fixed point. Since the original operator as described in @principles_of_program_analysis, did not stabilize or necessarily have a least fixed point, an approximate upper bound is used. For the example above, this is the upper bound of the interval is $plus infinity$, instead of the sound one: $1000$.
 
 
 // #colbreak()
@@ -235,9 +232,9 @@ This subsection will discuss the implementation for the second discussion point,
 
 === Context
 
-The loop context is created just as the return context is, append the call string context to the existing context and the the k latest context, and discard the rest.
+The loop context is created just as the return context is, append the call string context to the existing context and the the `k` latest context, discarding the rest.
 
-// TODO: Update code
+
 #figure(
   zebraw(
     lang: false,
@@ -256,11 +253,13 @@ The loop context is created just as the return context is, append the call strin
 
 === Unrolling
 
-Detecting loop head & start is done by using the loophead method, the n value is passed to it. If it returns true, retrieve the node for which it matched. Retrieve the loophead by taking the head of the result of the operation  the done in the loophead method. Create a new context, by passing the values to the function shown in @loopcontext. Use the currentContext, `loopStart` and `s` as values.
+Detecting loop head & start is done by using the loophead method, the `n` value is given as argument. If the method returns true, the matching node is returned. The loophead is retrieved by taking the head of the resulting list of the method applied to the `CfgStmNode`.
 
-The newly created context is propagated, by using the propagate method, passing the `s` as the lattice value, in conjunction with the newContext and `AstNode` for which the if matched.
+A new context is created by passing all the values (`currentContext`, `loopStart`, `s`) to the `makeLoopContext` method, shown in @loopcontext
 
-// TODO: Update code
+The newly created context is propagated, by using the `propagate` method. To which the `s` value is passed as the lattice value, in combination with the `newContext` and `m` (AstNode) values.
+
+
 #figure(
   zebraw(
     lang: false,
@@ -284,10 +283,9 @@ The newly created context is propagated, by using the propagate method, passing 
 
 == Results
 
-The results of executing the interval analysis with loop unrolling on the `loopproject.tip` example file with the following command: `./tip -interval wlrw vubexamples/loopproject.tip` can be seen in @interval-loop-results.
+The results of executing the interval analysis with loop unrolling on the `loopproject.tip` example file with the following command: `./tip -interval wlrw vubexamples/loopproject.tip`, can be seen in @interval-loop-results.
 
 
-// TODO: Update image
 #figure(
   image(
     "images/interval-loop.png",
@@ -296,10 +294,9 @@ The results of executing the interval analysis with loop unrolling on the `loopp
 ) <interval-loop-results>
 
 
-As is shown in the result of the analysis @interval-loop-results, the interval of the result variable: $x$ is still the same as before namely: $[0, plus infinity]$. There is now a additional context, for which an interval analysis was performed, but the result of the analysis is the same.
+As shown in the result of the analysis @interval-loop-results, the interval of the result variable: $x$ is still the same as before namely: $[0, plus infinity]$. There is now a additional context, for which an interval analysis was performed, but the result of the analysis is the same.
 
 
-// #colbreak()
 = Discussion Point 3
 
 This section will discuss the results of the third discussion point.
@@ -308,14 +305,17 @@ This section will discuss the results of the third discussion point.
 
 *Question*: Which variables would you include in the context for functional loop unrolling?
 
-Since the bases of functional sensitivity is on the abstract state, it would at least start of with the variable(s) defined in the predicate of the `while` loop. The more variables added to the context that are defined/used inside of the loop the more precision is gained. Increasing the size of the state to be stored in the context, comes with the drawback that performance might be reduced.
+// Since the bases of functional sensitivity is on the abstract state, it would at least start of with the variable(s) defined in the predicate of the `while` loop. The more variables added to the context that are defined/used inside of the loop the more precision is gained. Increasing the size of the state to be stored in the context, comes with the drawback that performance might be reduced.
+
+// Functional sensitivity is grounded in the abstract state; therefore, the analysis naturally begins with the variables defined in the while loop predicate. While incorporating additional variables used within the loop body increases precision, expanding the state stored in the context often results in a performance trade-off.
 
 Continuing from the context with at least variable $i$. The variable $x$, defined in the loop may also be added.
 
 
 == Functional vs Callstring
 
-*Question*: Write a TIP program where functional loop unrolling improves precision compared to callstring loop unrolling, and explain the difference.
+
+*Question*: Write a TIP program where functional loop unrolling improves precision, compared to callstring loop unrolling, and explain the difference.
 
 
 === Program
@@ -353,7 +353,7 @@ Continuing from the context with at least variable $i$. The variable $x$, define
 
 Because of the limitations on (k)-callstring loop unrolling, the analysis will lose the relation between the $i % 2 == 0$ on iterations that are larger than k.
 
-In contrast the functional loop unrolling will be able to 'store' this relation for longer, since for each abstract state a new context is created. Thus maintaining the periodic relation of the $i % 2 == 0$ predicate in memory.
+In contrast, functional loop unrolling will be able to 'store' this relation for longer, since for each abstract state a new context is created. Thus maintaining the periodic relation of the $i % 2 == 0$ predicate in memory.
 
 
 == Finite
@@ -366,7 +366,7 @@ In contrast the functional loop unrolling will be able to 'store' this relation 
 
 Applying the practice of loop unrolling to functional sensitivity does not change the fact that for some given programs the analysis will *not* terminate. An example for such a program can be seen in @program-non-terminating.
 
-// TODO: Check if valid example?
+
 #figure(
   zebraw(
     lang: false,
@@ -386,7 +386,9 @@ Applying the practice of loop unrolling to functional sensitivity does not chang
   caption: [Example program - functional loop unrolling.],
 ) <program-non-terminating>
 
-As with functional sensitivity for each abstract state of the program, in this the `while` loop a new context is generated @spa_interprocedural_analysis @few_lessons_interprocedural_analysis. Unrolling the first iteration of the loop as displayed in the above program, does not terminate for the given program, since the size of the state (on which functional sensitivity based itself) is not finite in this case. Therefore when considering functional sensitivity, the chosen state is to be considered carefully @spa_interprocedural_analysis.
+As with functional sensitivity for each abstract state of the program a new context is generated. The abstract state in the context of the example is a new iteration of the `while` loop @spa_interprocedural_analysis, @few_lessons_interprocedural_analysis.
+
+Unrolling the first iteration of the loop, as displayed in the above program @program-non-terminating (on which functional sensitivity based itself) is not finite in this case. Therefore, when considering functional sensitivity, the size of the state is to be considered carefully @spa_interprocedural_analysis.
 
 
 
