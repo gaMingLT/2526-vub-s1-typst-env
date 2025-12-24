@@ -357,8 +357,7 @@ and
 #linebreak()
 Found failure sequence for input: $x = 0, z = 0, y = 2640$.
 
-This concludes the concolic testing for this example. Other input's can be found, but they do not change the behaviour of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
-
+This concludes the concolic testing for this example. Additional input values can be found, but they do not change the behaviour of the program or find a new failure sequence. For example: when $y$ is a negative value, the `false` branch may be traversed, but does not significantly change the program output.
 
 
 #set page(columns: 2)
@@ -762,7 +761,7 @@ The results of the concolic testing can be summarized and are visible in @strate
   caption: [Concolic Testing - Search Strategies],
 ) <strategies-runs>
 
-The purpose of concolic testing, is the exploration of all branches, discovering valid & failure sequences for the program. Changing the search strategy used to explore all branches, does not inherently change the result of the execution. All satisfiable and unsatisfiable branches will be explored eventually.
+The purpose of concolic testing is the exploration of all branches, discovering valid & failure sequences for the program. Changing the search strategy used to explore all branches, does not inherently change the result of the execution. All satisfiable and unsatisfiable branches will be explored eventually.
 
 
 
