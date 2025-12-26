@@ -232,7 +232,7 @@ With the above result, negate the first condition $not(a gt 0)$ from the PC: $no
 )
 
 #linebreak()
-With the extended path condition now consisting of: $(a gt 0) and not(2 gt (b + 7)))$. The previous input resulted in the first 2 clauses of the PC to be true. For the next iteration the following input values will be chosen:
+With the extended path condition now consisting of: $(a gt 0) and not(2 gt (b + 7)))$. The previous input resulted in the first 2 clauses of the PC to be true. For the next iteration, the following input values will be chosen:
 - $x = 1$
 - $z = -5$
 
@@ -299,7 +299,7 @@ Keeping the value of x the same, but changing the value of $z$, as to negate the
 )
 
 #linebreak()
-So the chosen input did not show any new branches, therefore revert back to the previous input with:
+So the chosen input did not show any new branches. Therefore, revert back to the previous input with:
 - $x = 0$
 - $z = 0$
 and
@@ -357,24 +357,18 @@ and
 #linebreak()
 Found failure sequence for input: $x = 0, z = 0, y = 2640$.
 
-This concludes the concolic testing for this example, other input's can be found but they do not change the behaviour of the program or find a new failure sequence. For example; for $y$ a negative value my traverse the false branch, but does not significantly change the program output.
-
-// #colbreak()
-// === Iteration 5
-
-// #linebreak()
-
+This concludes the concolic testing for this example. Additional input values can be found, but they do not change the behaviour of the program or find a new failure sequence. For example: when $y$ is a negative value, the `false` branch may be traversed, but does not significantly change the program output.
 
 
 #set page(columns: 2)
 #pagebreak()
 == Comparison
 
-When looking at the output of the concolic testing using TIP, the input's are chosen randomly. While in contrast, using manual concolic execution, values can be chosen more targeted, in the sense arriving more easier to failure sequences.
+When looking at the output of the concolic testing using TIP, the input values are picked randomly. While in contrast, using manual concolic execution, values can be chosen more targeted, in the sense arriving more earlier to failure sequences.
 
 But the cost of keeping track of all values throughout execution is difficult for larger programs.
 
-In the end both execution should arrive at the 'same' values, with values depending on the program accepted range of input.
+In the end, both execution strategies should arrive at the 'same' output, with values depending on the program accepted range of input.
 
 
 == TIP Pointer Support
@@ -436,7 +430,7 @@ This section will discuss the implementation of the second discussion point. The
 
 == Implementation
 
-This subsection will discuss the implementation of concolic testing on arrays in TIP. In order of sequence will the operations be discussed: Interpreter, SymbolicValues and last SMTSolver.
+This subsection will discuss the implementation of concolic testing on arrays in TIP. In order of sequence the operations will be discussed: Interpreter, SymbolicValues and SMTSolver.
 
 === Interpreter
 
@@ -444,11 +438,11 @@ The purpose of the interpreter statements is updating/accessing the store with t
 
 #heading(numbering: none, level: 4, outlined: false)[Array Creation]
 
-The created array is iterated and the store is updated by use of a fold. Each concrete value is given a reference value, with the reference value kept within the symbolic array.
+The created array is iterated and the store is updated by the use of a fold. Each concrete value is given a reference value, with the reference value kept within the symbolic array.
 
 #heading(numbering: none, level: 4, outlined: false)[Array Select]
 
-Retrieve the `location` of the concrete value by accessing the `content` field on the array, using the integer value of the `idxv`. Once the location is retrieved the concrete value can be accessed by accessing the `s2` variable or the updated store.
+Retrieve the `location` of the concrete value by accessing the `content` field on the array, using the integer value of the `idxv`. Once the location is retrieved, the concrete value can be accessed by accessing the `s2` variable or the updated store.
 
 #figure(
   zebraw(
@@ -484,7 +478,7 @@ Apply the `arraySelect` method to generate the symbolic value of the array opera
 
 #heading(numbering: none, level: 4, outlined: false)[Array Store]
 
-First generate the symbolic values of the array updated. Retrieve the concrete reference for the array (`arrayReference`) by accessing the `env`using the `id` which is a location type.
+First, generate the symbolic values of the array updated. Retrieve the concrete reference for the array (`arrayReference`) by accessing the `env`using the `id` which is a location type.
 
 Accessing the reference for the updated value (`valueReference`)is done by accessing the `content` field on the array. Return a tuple of the `env` and updated store with concrete references to both the array & concrete value updated.
 
@@ -665,25 +659,26 @@ The `select` & `store` expand the array with the elements, as shown above, appen
 // For example,what does the execution tree look like? How many paths are there? Are there any unsatisfiable paths? What does this program do? When is the error triggered?
 
 
-The program execution performed $36$ runs, of which $27$ where successful and $9$ contain errors or unsatisfiable path.
+The program execution performed $36$ runs, of which $27$ were successful and $9$ contain errors or unsatisfiable path.
 
 // TODO: Add more here?
-*TODO*
+// *TODO*
 
 
 = Discussion Point 3
 
-This section will discuss the implementation of the third discussion point. As described in the assignment, two priorities where implemented. Both strategies where implemented in the `ConcolicEngine.scala` file.
+This section will discuss the implementation of the third discussion point. As described in the assignment, two priorities were implemented. Both strategies were implemented in the `ConcolicEngine.scala` file.
+
 
 == Bread-First Search Priority
 
 The first priority based BFS strategy is implemented by the method: `nextExplorationTargetBFS`. The search starts from the the `root` of the execution tree. The complete method implementation for the BFS Strategy can be found in @bfs-strategy.
 
-The first step is creating a `mutable.PriorityQueue`, by default the queue retrieves the elements with the highest priority, the algorithm requires the element with the lowest priority (shortest distance from root), for this the ordering is reversed on queue creation.
+The first step is creating a `mutable.PriorityQueue`, by default the queue retrieves the elements with the highest priority, the algorithm requires the element with the lowest priority (shortest distance from root). For this, the ordering is reversed on queue creation.
 
-After the empty queue is created, the children of the root are iterated and for each a tuple, is created containing the child node: `(child, 1)`, with the initial distance set to $1$.
+The children of the root are added to the empty queue. For each child, a tuple consisting of the following values is added: `(child, 1)`, the second value of the tuple indicating the distance from the root.
 
-The next step in the algorithm is to iterate the queue until it is empty. On entering the queue, the first element highest priority/shortest distance from root is removed.
+The next step in the algorithm is to iterate the queue until it is empty. For each iteration the first element with the highest priority (shortest distance) from root is removed.
 
 Using the below match case statement from the existing `nextExplorationTarget` method, the `true` & `false` branches are checked for the status of amount of explored branches.
 
@@ -732,15 +727,15 @@ The final step in the algorithm, is the `if` case, which can be found in the lis
   caption: [BFS - Append Children],
 ) <bfs-append-children>
 
-If there is a value defined the chosen node is used as the `nextTarget`. If  no value is defined, all children of the node are added to the queue, with the distance increased by one: `distance + 1`.
+If there is a value defined, the chosen node is used as the `nextTarget`. If  no value is defined, all children of the node are added to the queue, with the distance increased by one: `distance + 1`.
 
 
 
 == Random Priority
 
-The second search strategy is based on assigning a random priority to the node, the implementation method can be found in method: `nextExplorationTargetRNDM` and in listing: @random-strategy.
+The second search strategy is based on assigning a random priority to the node. The implementation method can be found in method: `nextExplorationTargetRNDM` and in listing: @random-strategy.
 
-The only changed required for this strategy is importing the `scala.util.Random` package. When populating the queue with the initial values of the `root`, use the `rand.nextInt(Int.MaxValue)` to assign a random value.
+The only change required for this strategy is importing the `scala.util.Random` package. When populating the queue with the initial values of the `root`, the `rand.nextInt(Int.MaxValue)` method is used to assign a random value.
 
 The method will proceed as before, the only remaining difference is the case when the node has already been explored. When appending the children of the node, instead of increment the distance value as before, a random value is assigned with the function described as before.
 
@@ -766,7 +761,7 @@ The results of the concolic testing can be summarized and are visible in @strate
   caption: [Concolic Testing - Search Strategies],
 ) <strategies-runs>
 
-Since the purpose of concolic testing, is the exploration of all branches, changing the strategy of which branches are explored first does not inherently change the result of the execution. All satisfiable & unsatisfiable branches will be explored eventually.
+The purpose of concolic testing is the exploration of all branches, discovering valid & failure sequences for the program. Changing the search strategy used to explore all branches, does not inherently change the result of the execution. All satisfiable and unsatisfiable branches will be explored eventually.
 
 
 
