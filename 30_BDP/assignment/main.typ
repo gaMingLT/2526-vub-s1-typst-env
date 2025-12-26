@@ -83,12 +83,12 @@
 // Modify the spacing above a figure (codeblock), so the language annotation does not conflict with text.
 #show figure.where(): set block(above: 1em, below: 0.50em)
 
-// TODO: Look at the assignment for which questions need to be discussed.
-
 #colbreak()
 = Intro
 
 This report will discuss an implementation for the assignment "Project: Traffic Prediction" for the course: Big Data Processing. First, the implementation itself will be discussed in section @implementation. Following that, answers to the required questions in section @discussion. And lastly, a small section on performance benchmarks in section @benchmarks.
+
+The output of the model (`output.model`) for each dataset is stored in the directory: `model-output`, with a separate directory named matching the dataset.
 
 
 = Implementation <implementation>
