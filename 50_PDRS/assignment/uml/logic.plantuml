@@ -1,0 +1,82 @@
+@startuml weKittensApp
+
+' --- Configuration ---
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam Nodesep 50
+skinparam Ranksep 50
+
+' --- Color Palette ---
+!define UI_COLOR #E1F5FE
+!define LOGIC_COLOR #E8F5E9
+!define NETWORK_COLOR #FFF3E0
+!define STATE_COLOR #F3E5F5
+
+' --- Client Layer ---
+package "Client Layer"  {
+    component weKittensApp as APP #B3E5FC
+
+    component "UI State" as UI LOGIC_COLOR {
+        component LobbyUI
+        component GameUI
+    }
+
+    component "Internal Logic" as LG LOGIC_COLOR {
+        component "Lobbies Manager" as LM
+        component "Game Manager" as GM
+    }
+}
+
+' --- Network Logic ---
+package "Network Layer"  NETWORK_COLOR {
+    interface "AT Local Interface" as ATL
+    interface "AT Remote Interface" as ATR
+    component KittensModel as MODEL #FFE0B2
+}
+
+' --- States ---
+package "Game State"  STATE_COLOR {
+    component GameObject #CE93D8 {
+        component GameState
+        component GameTable
+        component GameDeck
+        component PlayerHands
+    }
+    component PlayerHand
+}
+
+package "Lobby State"  STATE_COLOR {
+    component LobbyObject #CE93D8 {
+        component Lobbies
+        component Lobby
+    }
+}
+
+' --- Layout & Connections ---
+
+' Networking flow
+ATL -[hidden]- ATR
+MODEL -up-> ATL : " Broadcast"
+ATR -down-> MODEL : " Events"
+APP <--> MODEL : " Send/Receive"
+
+' Application Logic
+APP -down-> LM : " state: Lobby"
+APP -down-> GM : " state: Game"
+UI .up.> APP : " Queries"
+
+' State Composition
+LM *-- LobbyObject
+GM *-- GameObject
+
+GameObject *-- GameState
+GameObject *-- GameTable
+GameObject *-- GameDeck
+GameObject *-- PlayerHands
+PlayerHands "1" *-- "4" PlayerHand
+
+' Positioning help
+LobbyObject -[hidden]right- GameObject
+
+@enduml

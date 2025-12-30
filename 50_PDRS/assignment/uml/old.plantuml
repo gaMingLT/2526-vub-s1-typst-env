@@ -1,0 +1,65 @@
+' @startuml
+' skinparam componentStyle uml2
+' skinparam packageStyle rectangle
+
+' package "Client Layer" {
+'     component weKittensApp as APP
+'     component "UI State" as UI {
+'         component LobbyUI
+'         component GameUI
+'     }
+'     component "Logic" as LG {
+'         component "Lobbies" as LM
+'         component "Game" as GM
+'     }
+' }
+
+' package "Network Logic" {
+'     interface "AT Local Interface" as ATL
+'     interface "AT Remote Interface" as ATR
+'     component KittensModel as MODEL
+' }
+
+' package "Game State" {
+'     component GameObject {
+'         component GameState
+'         component GameTable
+'         component GameDeck
+'         component PlayerHands
+'     }
+'     component PlayerHand
+' }
+
+
+' package "Lobby State" {
+'     component LobbyObject {
+'         component Lobbies
+'         component Lobby
+'     }
+' }
+
+' APP --> MODEL : Send
+' MODEL --> APP : Receive
+
+' MODEL --> ATL: BroadCast & Send
+' ATR --> MODEL : Receive Events
+
+
+' APP --> LM : state: Lobby
+' APP --> GM : state: Game
+
+
+' UI --> APP : Queries State
+
+
+' GM *-- GameObject : creates
+' GameObject *-- GameState
+' GameObject *-- GameTable
+' GameObject *-- GameDeck
+' GameObject *-- PlayerHands
+' PlayerHands "1" *-- "4" PlayerHand : contains
+
+' LM *-- LobbyObject : creates
+
+
+' @enduml
