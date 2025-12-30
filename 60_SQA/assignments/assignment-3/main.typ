@@ -89,12 +89,12 @@ For both the asserts shown in @program-assert-1 & @program-assert-2, retrieve th
   zebraw(
     lang: false,
     ```scala
-    // x >= value
+    // assert value > number
     case ABinaryOp(GreatThan, id: AIdentifier, ANumber(i, _), _) =>
-       val xDecl = id.declaration
+      val xDecl = id.declaration
       // Get the interval for the declaration
       val old = s(xDecl)
-      // Create the new interval by applying (zero is ignored?)
+      // Create the new interval by applying (PInf is ignored)
       val newInterval = widenInterval(old, (i, PInf))
       // Update with the new interval
       s.updated(xDecl, newInterval)
@@ -105,20 +105,19 @@ For both the asserts shown in @program-assert-1 & @program-assert-2, retrieve th
 
 
 
-// TODO: Update code
 #figure(
   zebraw(
     lang: false,
     ```scala
-     // value >= number
-     case ABinaryOp(GreatThan, ANumber(i, _), id: AIdentifier, _) =>
-        val xDecl = id.declaration
-        // Get the interval for the declaration
-        val old = s(xDecl)
-        // Create the new interval by applying (zero is ignored?)
-        val newInterval = widenInterval(old, (i, MInf))
-        // Update with the new interval
-        s.updated(xDecl, newInterval)
+    // assert number > value
+    case ABinaryOp(GreatThan, ANumber(i, _), id: AIdentifier, _) =>
+      val xDecl = id.declaration
+      // Get the interval for the declaration
+      val old = s(xDecl)
+      // Create the new interval by applying (MInf is ignored)
+      val newInterval = widenInterval(old, (i, MInf))
+      // Update with the new interval
+      s.updated(xDecl, newInterval)
     ```,
   ),
   caption: [Assert - Version 2],
