@@ -144,17 +144,93 @@ The current implementation of the lobby system is a simple CRU system, no suppor
 
 On the creation of a lobby, the creator is set as the coordinator of the lobby. Each request for joining a lobby must be accepted by that specific player. This ensures a shared state of which players are included in the lobby and later the game. The game can also only be started by the initiating player.
 
+Multiple games can be played on the network, by creating separate lobbies using the lobby system.
+
+
 
 == Game
+
+
+
+=== Disconnections
+
+When is player is detected to be offline, if it is currently that player's turn, the game is paused for all players, user input is blocked.
+
+In the other case, the players's are allowed to continue playing, until it is that player's turn.
+
+
+=== Exploding Kitten
+
+If a player draws an exploding exploding kitten card and no defuse card is present in the players hand the player is considered dead.
+
+For the implementation, it was chosen to discard all the cards in the player hand, and the game continues without the player in the game order, but is allowed to spectate the game. If the player wishes, he is able to leave/exit the application.
+
 
 
 == AT
 
 
 
+=== Offline Time-Out
+
+When a player is detected to be offline, a future is created. At the same time a timer is started, when the timer has elapsed, the future is ruined by creating an exception and calling the `ruin(e)` method on the resolver.
+
+In case the user appears online again, the `resolve()` message is send to the resolver. This will resolve the future, and not future action will be taken. When the `ruin` message is send to the resolver, the `catch` block on the future is triggered.
+
+The message in the exceptions is retrieved and logged. The id of the user is passed to the `kickPlayer` method defined on the `model`. The method on it's part will handle kicking the player if he is part of the game.
+
+
 
 
 = Test Scenarios <test-scenarios>
+
+
+
+== Mock Network
+
+For easier testing of the application, a mock network implementation was created to mimic behavior of the AT network as best as possible.
+
+The mock implementation can be found in the: `mock` directory inside the `test` directory. The implementation consists of the following files: `MockNetwork`, `MockInterface`, `MockLocalInterface`, `MockRemoteInterface`.
+
+When starting a test scenario, a mock network is created. Each application receives a `MockInterface`, consisting of a `MockLocalInterface` and `MockRemoteInterface`. The `MockLocalInterface` implements the `atLocalInterface` interface class, as best as possible. The `MockRemoteInterface` is responsible for passing the received messages to the `KittensModel` class as the AT implementation does.
+
+The `MockNetwork` mimics the discovery of an actor when one is added to the network, interface status is also updated across the network. Since the AT implementation expects events to be serialized across the network, the values passed through the mock network must also mimic the behavior. Copying the values passed over the network is handle by the `deepCopyRecord` function.
+
+
+== Threads
+
+To prevent threading issues, when executing actions, such as clicking buttons, selecting rows in a table, the code must be passed to the `awt.EventQueue`. This ensures all actions are processed in the correct order and no other thread than the `awt` one performs UI actions.
+
+
+
+== Lobby
+
+The following test scenarios are declared for the lobbies:
++ `createLobby`
++ `disconnectFromLobby`
++ `startGame`
++ `leaveLobby`
++ `playerLimitLobby`
+
+
+=== `playerLimitLobby`
+
+This test scenario ensure the lobby system does not allow for more than 4 players to be present inside the lobby and thus the game.
+
+// TODO: More here
+
+
+
+== Game
+
+The following test scenarios are currently included in game test files:
+- `TwoPlayerTests`
+  + `drawCards`
+- `FourPlayerTests`
+  + `drawCards`
+
+
+// TODO: More here
 
 
 
@@ -173,9 +249,9 @@ The following subsection will describe on how to run the game, in the different 
 
 The game can be started by creating 2 or more run configurations of the `main.at` file. Using the Jet-brains included `compound` functionality, the select number of applications can be started.
 
+
+
 // TODO: Add example config running example script to folder?
-
-
 == Tests <tests>
 
 
@@ -190,9 +266,10 @@ Running the tests can be done by running any individual test or running all test
 
 
 
-#set page(columns: 1)
-= Appendix <appendix>
+
+// #set page(columns: 1)
+// = Appendix <appendix>
 
 
 
-#bibliography("references.bib")
+// #bibliography("references.bib")
