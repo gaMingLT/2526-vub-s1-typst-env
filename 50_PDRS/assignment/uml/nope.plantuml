@@ -1,0 +1,50 @@
+@startuml
+title Card Played / Time-Out
+
+start
+
+:Player plays a card;
+partition "Initialization" {
+    :Set **waitingForAck** = true;
+    :Call **setNopeCardTimeOut**;
+    :Start 10s timers for all players;
+}
+
+fork
+    :Wait for Player Response;
+    if (Response Received?) then (Yes)
+        :Retrieve list of online players;
+        :Set player ID to **true** in **cardPlayedAck** map;
+        :Terminate timer for that specific player;
+
+        if (Was it a **Nope** card?) then (Yes)
+            :Activate **Nope** card action;
+            :Cancel **all** active timers;
+            :Re-activate last played card power;
+            stop
+        else (No)
+            :Continue checking status;
+        endif
+    else (No)
+    endif
+
+fork again
+    :Timer Elapses (10s);
+    :Throw **XResponseException**;
+    :Call **ruin** on responseResolver;
+    :Log timeout message in catch block;
+    :Call **passPassPlayedCardTimer**;
+end fork
+
+partition "Completion Check" {
+    if (All players acknowledged OR \nAll online players acknowledged?) then (Yes)
+        :Activate power of the last card;
+        :Set **waitingForAck** = false;
+    else (No)
+        :Wait for remaining responses/timers;
+        detach
+    endif
+}
+
+stop
+@enduml

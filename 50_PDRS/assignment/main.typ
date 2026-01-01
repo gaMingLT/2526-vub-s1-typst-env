@@ -211,6 +211,13 @@ This subsection will discuss design choices made pertaining to the distributed p
 
 === Nope Card Time-Out <at-time-out>
 
+The description of the nope-card time-out system, can be seen in @nope-card-flowchart.
+
+#figure(
+  image("images/nope.svg"),
+  caption: "Card Played, nope card time-out",
+) <nope-card-flowchart>
+
 
 When a card is played, the AT method `setNopeCardTimeOut` is called with the list of players currently in the game. For each player a future is created, when the future is resolved, the accompanying offline timer is cancelled. When the future is ruined, the `passPassPlayedCardTimer` method on the `Kittensmodel` class is called, passing the played card in that players name.
 
