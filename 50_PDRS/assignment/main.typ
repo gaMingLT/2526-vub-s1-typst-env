@@ -70,10 +70,10 @@
 
 This report will discuss an implementation for the assignment "weKittens: Exploding Kittens" for the course: Programming Distributed & Replicated Systems".
 
-First, the implementation itself will be discussed in section @implementation. Following the implementation, design choices will be discussed in @design-choices. Test scenarios in section @test-scenarios. And to close, running the game in section @manual.
+First, the implementation itself will be discussed in section @implementation. Following the implementation, design choices will be discussed in section @design-choices. Test scenarios in section @test-scenarios. And to close, running the game in section @manual.
 
 
-// #colbreak()
+#colbreak()
 = Implementation <implementation>
 
 This subsection will discuss the implementation of the application. At first a general overview will be given of the application, using the image in @component-diagram, as a guide.
@@ -83,6 +83,7 @@ This subsection will discuss the implementation of the application. At first a g
   caption: "weKittens Component Diagram",
 ) <component-diagram>
 
+There are more classes responsible for the workings of the application, but the more important ones are included in @component-diagram.
 
 == UI
 
@@ -159,11 +160,40 @@ When is player is detected to be offline, if it is currently that player's turn,
 In the other case, the players's are allowed to continue playing, until it is that player's turn.
 
 
+
+== Reconnect
+
+When a player reconnects after disconnecting from the network, the current player will send the updates value of the game to the reconnecting player.
+
+On receiving the GameEvent, the player will replace the current game values with the new values. Currently the implementation is disabled, since the order of events is not guaranteed to be 'total', it is possible for the reconnect event to be arrive before game events occurred earlier.
+
+Possible solution to this problem, is implementing a sort of order on the game events. Or making the operations idempotent on the game state.
+
+
 === Exploding Kitten
 
 If a player draws an exploding exploding kitten card and no defuse card is present in the players hand the player is considered dead.
 
 For the implementation, it was chosen to discard all the cards in the player hand, and the game continues without the player in the game order, but is allowed to spectate the game. If the player wishes, he is able to leave/exit the application.
+
+
+// TODO: Check with current implementation
+== Nope Card <nope-card>
+
+
+*TODO*
+
+
+
+== Dead & Leaving
+
+After a player is dead, he is still able to follow the game, but all his cards have been placed on the discard pile and is unable to draw any more cards.
+
+In both cases, the player is removed from the game order.
+
+For the actions, where there is expected player action or application responses, these are handled by taking into account the 'online' player list.
+
+When playing a favor/cat card, if the card is allowed to be played (accepted by all participating players), the player may select the player he wishes to request a card from. The list of selectable players is kept up to date by the players are that are actively participating and online.
 
 
 
@@ -201,6 +231,10 @@ The `MockNetwork` mimics the discovery of an actor when one is added to the netw
 
 To prevent threading issues, when executing actions, such as clicking buttons, selecting rows in a table, the code must be passed to the `awt.EventQueue`. This ensures all actions are processed in the correct order and no other thread than the `awt` one performs UI actions.
 
+Most calls to the `awt.EventQueue`, are also wrapped inside of a `CompletableFuture`, containing a delay depending on the previous action performed before. This allows the returning future to be delayed by calling `join` on the result, but the main thread containing, the application(s) and network to continue working.
+
+Once the time inside of the future has passed, the asserts are performed on the application values.
+
 
 
 == Lobby
@@ -226,8 +260,12 @@ This test scenario ensure the lobby system does not allow for more than 4 player
 The following test scenarios are currently included in game test files:
 - `TwoPlayerTests`
   + `drawCards`
+  + `playerLeavesWins`
+- `ThreePlayerTests`
+  + `playerLeaves`
 - `FourPlayerTests`
   + `drawCards`
+  + `playerLeaves`
 
 
 // TODO: More here
@@ -235,9 +273,9 @@ The following test scenarios are currently included in game test files:
 
 
 // TODO: Make video
-== Video
+// == Video
 
-Included in the zip folder, is a video detailing the workings of the application, according to the details mentioned in the report.
+// Included in the zip folder, is a video detailing the workings of the application, according to the details mentioned in the report.
 
 
 = Manual <manual>
@@ -254,17 +292,25 @@ The game can be started by creating 2 or more run configurations of the `main.at
 // TODO: Add example config running example script to folder?
 == Tests <tests>
 
+Majority of the tests are created in Java using the Junit testing framework.
 
 
-=== Ambienttalk <tests-at>
+// === Ambienttalk <tests-at>
 
 
 
-=== Java <tests-at>
+=== Java <tests-java>
 
-Running the tests can be done by running any individual test or running all test included in the `test` directory.
+Running the tests can be done by running any individual test. While running all tests all at once works, tested, they do sometimes do not behave as expected.
 
 
+// == Bug
+
+// There was one particular AT Network that appeared shortly before the deadline, but that I wasn't able to track down on how/why it occurred.
+
+// It pertains to the AT code, of when a player is discovered, the id of the player is used in HashMap and stored with the reference. At a certain point when running the application, the same reference, was discovered twice with different ID's.
+
+// The same code was used on a Windows computer but did not have the same network 'bug'. The bug has at the moment of writing disappeared when running the application on a Mac. It is evidently possibly this is a AT implementation or Java implementation issue.
 
 
 // #set page(columns: 1)
