@@ -151,9 +151,10 @@ Multiple games can be played on the network, by creating separate lobbies using 
 
 == Game
 
+This subsection will discuss design choices pertaining to the game.
 
 
-=== Disconnections
+=== Disconnects
 
 When is player is detected to be offline, if it is currently that player's turn, the game is paused for all players, user input is blocked.
 
@@ -161,7 +162,7 @@ In the other case, the players's are allowed to continue playing, until it is th
 
 
 
-== Reconnect
+=== Reconnect
 
 When a player reconnects after disconnecting from the network, the current player will send the updates value of the game to the reconnecting player.
 
@@ -177,15 +178,21 @@ If a player draws an exploding exploding kitten card and no defuse card is prese
 For the implementation, it was chosen to discard all the cards in the player hand, and the game continues without the player in the game order, but is allowed to spectate the game. If the player wishes, he is able to leave/exit the application.
 
 
-// TODO: Check with current implementation
-== Nope Card <nope-card>
+
+=== Nope Card <nope-card>
 
 
-*TODO*
+When any card is played, the variable `waitingForAck` is set to `true` and for each player a timer is started, for more info on the AT implementation see @at-time-out.
+
+Each time a response is received from a player, either passing or playing a nope card, the list of online player is retrieved. The id of the player is set to `true`, in the `cardPlayedAck` hash map. And the timer for the particular player is terminated.
+
+Then the value of the `card` value is checked, if the card is not null, and the type of the played card is a nope card, the action of playing a nope card is activated, and last played card power is activated. The timers for all players are also cancelled.
+
+Two boolean are created, one for checking if all players have acknowledge or if all online players have acknowledged. If that is the case, the power of the last card is activated.
 
 
 
-== Dead & Leaving
+=== Dead & Leaving
 
 After a player is dead, he is still able to follow the game, but all his cards have been placed on the discard pile and is unable to draw any more cards.
 
@@ -199,16 +206,24 @@ When playing a favor/cat card, if the card is allowed to be played (accepted by 
 
 == AT
 
+This subsection will discuss design choices made pertaining to the distributed part of the application in Ambienttalk.
 
 
-=== Offline Time-Out
+=== Nope Card Time-Out <at-time-out>
+
+
+When a card is played, the AT method `setNopeCardTimeOut` is called with the list of players currently in the game. For each player a future is created, when the future is resolved, the accompanying offline timer is cancelled. When the future is ruined, the `passPassPlayedCardTimer` method on the `Kittensmodel` class is called, passing the played card in that players name.
+
+The response timer is created, with a timing of 10 seconds (testing purposes). If the timer has elapsed, an exception is created named: `XReponseException`, with subtype: `Exeception`. The exeception is passed as a value to the `ruin` method on the `reponseResolver`. with a messages indicated which player did not response in time. The message is than logged in the `catch` block of the future.
+
+
+=== Offline Time-Out <offline-time-out>
 
 When a player is detected to be offline, a future is created. At the same time a timer is started, when the timer has elapsed, the future is ruined by creating an exception and calling the `ruin(e)` method on the resolver.
 
 In case the user appears online again, the `resolve()` message is send to the resolver. This will resolve the future, and not future action will be taken. When the `ruin` message is send to the resolver, the `catch` block on the future is triggered.
 
 The message in the exceptions is retrieved and logged. The id of the user is passed to the `kickPlayer` method defined on the `model`. The method on it's part will handle kicking the player if he is part of the game.
-
 
 
 
