@@ -70,13 +70,13 @@
 
 This report will discuss an implementation for the assignment "weKittens: Exploding Kittens" for the course: Programming Distributed & Replicated Systems".
 
-First, the implementation itself will be discussed in section @implementation. Following the implementation, design choices will be discussed in section @design-choices. Test scenarios in section @test-scenarios. And to close, running the game in section @manual.
+First, the implementation itself will be discussed in section @implementation. Following the implementation, design choices will be discussed in section @design-choices. Test scenarios in section @test-scenarios. And to close, running the game, in section @manual.
 
 
 #colbreak()
 = Implementation <implementation>
 
-This subsection will discuss the implementation of the application. At first a general overview will be given of the application, using the image in @component-diagram, as a guide.
+This subsection will discuss the implementation of the application. At first, a general overview of the application will be given, using the image in @component-diagram, as a guide.
 
 #figure(
   image("images/weKittensApp.svg"),
@@ -87,25 +87,25 @@ There are more classes responsible for the workings of the application, but the 
 
 == UI
 
-The interface of the application, will depending on the state, be either the `lobbyUI` or `gameUI`. The interface object, query the state of their respective logic objects during creation.
+Depending on the state of the application, the interface of the application is different. For the lobby state, the `lobbyUI` will be displayed, for game state, it is `gameUI`. The current active UI object will query the state of the currently active logic object (`lobbies` or `game`).
 
-It is the job of the `weKittensApp` to refresh the interface when a state has occurred, so the interface can display it accordingly.
+It is the job of the `weKittensApp` to refresh the interface when a state change has occurred, so the interface displays it accordingly.
 
 
 == Model
 
-The purpose of the `KittensModel` class is to be the bridge between the Ambienttalk logic & the Java logic. The class can be see as the network controller.
+The purpose of the `KittensModel` class is to be the bridge between the AmbientTalk logic & the Java logic. The class acts as the network controller.
 
-All the messages send over the AT interface, must first pass through this class. All received messages from the AT `remoteInterface` are received by the respective method depending on the network state (lobby/game).
+All the messages sent over the AT interface, must first pass through the `KittensModel` class. All received messages from the AT `remoteInterface` are received by the respective method depending on the network state (lobby/game).
 
-The received lobby/game-events are de-structured based on the specified enum value (`LobbyEventType`/`GameEventType`), and passed to the matching method. The method than applies the changes to the lobby or game object.
+The received lobby/game-events are de-structured, based on the specified enum value (`LobbyEventType`/`GameEventType`), and passed to the matching method. The method than applies the changes to the lobby or game object.
 
 
-== Ambienttalk
+== AmbientTalk
 
-The `localInterface` receives the messages from the `KittensModel` class, depending on if the event has to be broadcasted or send to a single player, a different method will be picked.
+The `localInterface` receives the messages from the `KittensModel` class. A game event can be either send to a single player or broadcasted to all players currently in the game.
 
-There are different broad/send methods for the lobby & game state. Broadcasting lobby events must happen network wide, while game events are restricted to game players only. The same counts for sending an event to a specific player.
+The lobby & game object have different methods for broadcasting & sending events. Broadcasting lobby events happen network wide, while game events are restricted to players present in the game. Single events are send to the player in question.
 
 During the transition from lobby to a game, the list of id's of the player's are set in the AT object by the method: `setGamePlayers`.
 
@@ -114,36 +114,36 @@ During the transition from lobby to a game, the list of id's of the player's are
 
 The lobbies object maintains a list of all lobbies that are currently present on the network. A player will create a lobby, which will be reflected in the lobbies list of the other players active on the network.
 
-If a player joins, the joining player get's a lobby object that is set to match the joined lobby. Other players on the network will receive the updated lobby information. More information about joining a lobby in @design-choices-lobby. Each player is also able to leave a already joined lobby.
+If a player joins, the joining player get's a lobby object that is set to match the joined lobby. Other players on the network will receive the updated lobby information. More information about joining a lobby in @design-choices-lobby. Each player is also able to leave an already joined lobby.
 
 
 == Game
 
-The Game object, contains the state & logic of the Exploding Kittens game. Included in this state are the following most important fields: `GameDeck`, `GameTable`, `PlayerHands`.
+The Game object contains the state & logic of the Exploding Kittens game. Included in this state are the following most important fields: `GameDeck`, `GameTable`, `PlayerHands`.
 
-The `GameDeck` represents the list of cards from which players can draw a card. The state of the table, is represented by the `GameTable`, it displays which card a user draw from the deck pile, which card a user played on the discard pile and the number of cards user has remaining in its hand.
+The `GameDeck` represents the list of cards from which players can draw a card. The state of the table is represented by the `GameTable`. It displays which card a user draws from the deck pile; which card a user played on the discard pile and the number of cards a user has remaining in its hand.
 
-Keeping record of which cards each has in its hand is maintained by the class `PlayerHands`. It consists, for each player of the game out of a `PlayerHand`. Containing the list of cards the user currently holds, the stack of the player (dead/disconnected, ...).
+Keeping record of which cards each player has in its hand is maintained by the class `PlayerHands`. For each player in the game, a separate `PlayerHand` object is stored. Containing the list of cards the user currently holds and the state of the player (dead/disconnected).
 
 
 == Event Serialization
 
 Building on the event system displayed during the practicums, each lobby/game event is a record that is serialized when passed over the AT network.
 
-For each type of event, a record class is defined, containing the values that are to be send over. All values contained must also be serializable. Each record class matches with a values of the `LobbyEventType`/`GameEventType` enum.
+Each individual lobby & game event has a matching record object. Every defined record must implement the serializable class. For each event, the event itself and a matching enum value (`LobbyEventType` / `GameEventType`) will be send.
 
-On the receiving side, the AT remote interface, sends the event, to the `KittensModel`, which will cast the `Record` to its correct types based on the `Enum` value. This structure of passing events is similar for the lobby & game state of the application.
+On the receiving side the AT remote interface sends the event, to the `KittensModel`, which will cast the `Record` to its correct type based on the `Enum` value. This structure of passing events is similar for the lobby & game state of the application.
+
 
 
 = Design Choices <design-choices>
 
 
-
 == Lobby <design-choices-lobby>
 
-The current implementation of the lobby system is a simple CRU system, no support for deleting a lobby at the moment.
+The current implementation of the lobby system is a simple CRU (Create-Read-Update) system, no support for deleting a lobby at the moment.
 
-On the creation of a lobby, the creator is set as the coordinator of the lobby. Each request for joining a lobby must be accepted by that specific player. This ensures a shared state of which players are included in the lobby and later the game. The game can also only be started by the initiating player.
+On the creation of a lobby, the creator is set as the coordinator of the lobby. Each request for joining a lobby must be accepted by that specific player. This ensures a shared state of which players are included in the lobby. The game can also only be started by the initiating player.
 
 Multiple games can be played on the network, by creating separate lobbies using the lobby system.
 
@@ -156,26 +156,23 @@ This subsection will discuss design choices pertaining to the game.
 
 === Disconnects
 
-When is player is detected to be offline, if it is currently that player's turn, the game is paused for all players, user input is blocked.
-
-In the other case, the players's are allowed to continue playing, until it is that player's turn.
-
+Depending on the state of the game, if a player is detected to be offline and it is currently that player's turn, the game is paused for all players, user input is blocked. In the other case, the players's are allowed to continue playing, until it is that offline player's turn.
 
 
 === Reconnect
 
 When a player reconnects after disconnecting from the network, the current player will send the updates value of the game to the reconnecting player.
 
-On receiving the GameEvent, the player will replace the current game values with the new values. Currently the implementation is disabled, since the order of events is not guaranteed to be 'total', it is possible for the reconnect event to be arrive before game events occurred earlier.
+On receiving the GameEvent, the player will replace the current game values with the new values. Currently the implementation is disabled, since the order of events is not guaranteed to be 'total', it is possible for the reconnect event to arrive before game event's send earlier.
 
-Possible solution to this problem, is implementing a sort of order on the game events. Or making the operations idempotent on the game state.
+Possible solution to this problem, is implementing a sort of order on the game events, or making the operations idempotent on the game state.
 
 
 === Exploding Kitten
 
-If a player draws an exploding exploding kitten card and no defuse card is present in the players hand the player is considered dead.
+If a player draws an exploding exploding kitten card and no defuse card is present in the players hand, the player is considered dead.
 
-For the implementation, it was chosen to discard all the cards in the player hand, and the game continues without the player in the game order, but is allowed to spectate the game. If the player wishes, he is able to leave/exit the application.
+For the implementation, it was chosen to discard all the cards in the player's hand. The game than continues without the player in the game order, but is allowed to spectate the game. If the player wishes, he is able to exit the application.
 
 
 
@@ -186,15 +183,15 @@ When any card is played, the variable `waitingForAck` is set to `true` and for e
 
 Each time a response is received from a player, either passing or playing a nope card, the list of online player is retrieved. The id of the player is set to `true`, in the `cardPlayedAck` hash map. And the timer for the particular player is terminated.
 
-Then the value of the `card` value is checked, if the card is not null, and the type of the played card is a nope card, the action of playing a nope card is activated, and last played card power is activated. The timers for all players are also cancelled.
+Then the value of the `card` value is checked. If the card is not null, and the type of the played card is a nope card, the action of playing a nope card is activated, and last played card power is activated. The timers for all players are also cancelled.
 
-Two boolean are created, one for checking if all players have acknowledge or if all online players have acknowledged. If that is the case, the power of the last card is activated.
+Two boolean values are created: one for checking if all players have acknowledged, or if all online players have acknowledged. If that is the case, the power of the last card is activated.
 
 
 
 === Dead & Leaving
 
-After a player is dead, he is still able to follow the game, but all his cards have been placed on the discard pile and is unable to draw any more cards.
+After a player is dead, he is still able to follow the game, but all his cards are placed on the discard pile, and he is unable to draw any more cards.
 
 In both cases, the player is removed from the game order.
 
@@ -221,16 +218,16 @@ The description of the nope-card time-out system, can be seen in @nope-card-flow
 
 When a card is played, the AT method `setNopeCardTimeOut` is called with the list of players currently in the game. For each player a future is created, when the future is resolved, the accompanying offline timer is cancelled. When the future is ruined, the `passPassPlayedCardTimer` method on the `Kittensmodel` class is called, passing the played card in that players name.
 
-The response timer is created, with a timing of 10 seconds (testing purposes). If the timer has elapsed, an exception is created named: `XReponseException`, with subtype: `Exeception`. The exeception is passed as a value to the `ruin` method on the `reponseResolver`. with a messages indicated which player did not response in time. The message is than logged in the `catch` block of the future.
+The response timer is created, with a timing of 10 seconds (testing purposes). If the timer has elapsed, an exception is created named: `XReponseException`, with subtype: `Exeception`. The exeception is passed as a value to the `ruin` method on the `reponseResolver`. with a message indicating which player did not response in time. The message is than logged in the `catch` block of the future.
 
 
 === Offline Time-Out <offline-time-out>
 
-When a player is detected to be offline, a future is created. At the same time a timer is started, when the timer has elapsed, the future is ruined by creating an exception and calling the `ruin(e)` method on the resolver.
+When a player is detected to be offline, a future is created. At the same time, a timer is started. When the timer has elapsed, the future is ruined by creating an exception and calling the `ruin(e)` method on the resolver.
 
-In case the user appears online again, the `resolve()` message is send to the resolver. This will resolve the future, and not future action will be taken. When the `ruin` message is send to the resolver, the `catch` block on the future is triggered.
+In case the user appears online again, the `resolve()` message is send to the resolver. This will resolve the future, and no future action will be taken. When the `ruin` message is send to the resolver, the `catch` block on the future is triggered.
 
-The message in the exceptions is retrieved and logged. The id of the user is passed to the `kickPlayer` method defined on the `model`. The method on it's part will handle kicking the player if he is part of the game.
+The message in the exceptions is retrieved and logged. The id of the user is passed to the `kickPlayer` method defined on the `model`. The method on its part will handle kicking the player if he is part of the game.
 
 
 
@@ -246,14 +243,16 @@ The mock implementation can be found in the: `mock` directory inside the `test` 
 
 When starting a test scenario, a mock network is created. Each application receives a `MockInterface`, consisting of a `MockLocalInterface` and `MockRemoteInterface`. The `MockLocalInterface` implements the `atLocalInterface` interface class, as best as possible. The `MockRemoteInterface` is responsible for passing the received messages to the `KittensModel` class as the AT implementation does.
 
-The `MockNetwork` mimics the discovery of an actor when one is added to the network, interface status is also updated across the network. Since the AT implementation expects events to be serialized across the network, the values passed through the mock network must also mimic the behavior. Copying the values passed over the network is handle by the `deepCopyRecord` function.
+The `MockNetwork` mimics the discovery of an actor when one is added to the network, the interface status is also propagated across the network.
+
+Since the AT implementation expects events to be serialized across the network, the values passed through the mock network must also mimic this behavior. Copying the values passed over the network is handle by the `deepCopyRecord` function.
 
 
 == Threads
 
-To prevent threading issues, when executing actions, such as clicking buttons, selecting rows in a table, the code must be passed to the `awt.EventQueue`. This ensures all actions are processed in the correct order and no other thread than the `awt` one performs UI actions.
+To prevent threading issues when executing actions, such as clicking buttons, selecting rows in a table, the code must be passed to `awt.EventQueue`. This ensures all actions are processed in the correct order and no other thread than the `awt` one performs UI actions.
 
-Most calls to the `awt.EventQueue`, are also wrapped inside of a `CompletableFuture`, containing a delay depending on the previous action performed before. This allows the returning future to be delayed by calling `join` on the result, but the main thread containing, the application(s) and network to continue working.
+Most calls to the `awt.EventQueue` are wrapped inside of a `CompletableFuture`, containing a delay depending on the action performed before. This allows the returning future to be delayed by calling `join` on the result. The main thread, running the network and application(s) can continue to work.
 
 Once the time inside of the future has passed, the asserts are performed on the application values.
 
@@ -271,9 +270,7 @@ The following test scenarios are declared for the lobbies:
 
 === `playerLimitLobby`
 
-This test scenario ensure the lobby system does not allow for more than 4 players to be present inside the lobby and thus the game.
-
-// TODO: More here
+This test scenario ensures the lobby system does not allow for more than 4 players to be present inside the lobby, and resulting game.
 
 
 
@@ -290,40 +287,31 @@ The following test scenarios are currently included in game test files:
   + `playerLeaves`
 
 
-// TODO: More here
 
 
+== Video
 
-// TODO: Make video
-// == Video
-
-// Included in the zip folder, is a video detailing the workings of the application, according to the details mentioned in the report.
+Included in the zip folder, is a video detailing the workings of the application, according to the implementation described above and requirements in the assignment description.
 
 
 = Manual <manual>
 
-The following subsection will describe on how to run the game, in the different player configuration and how to execute the accompanying tests.
+The following subsection will describe on how to run the application in the different player configuration and how to execute the accompanying tests.
 
 
 == Game
 
-The game can be started by creating 2 or more run configurations of the `main.at` file. Using the Jet-brains included `compound` functionality, the select number of applications can be started.
+The game can be started by creating 2 or more run configurations of the `main.at` file. Using the Jet-brains included `compound` functionality, a specific number of applications can be started.
 
 
-
-// TODO: Add example config running example script to folder?
 == Tests <tests>
 
 Majority of the tests are created in Java using the Junit testing framework.
 
 
-// === Ambienttalk <tests-at>
-
-
-
 === Java <tests-java>
 
-Running the tests can be done by running any individual test. While running all tests all at once works, tested, they do sometimes do not behave as expected.
+Running the tests can be done by running any individual test. While running all tests simultaneously is a tested approach, they occasionally exhibit unexpected behavior.
 
 
 // == Bug
