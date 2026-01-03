@@ -70,7 +70,7 @@
 
 This report will discuss an implementation for the assignment "weKittens: Exploding Kittens" for the course: Programming Distributed & Replicated Systems".
 
-First, the implementation itself will be discussed in section @implementation. Following the implementation, design choices will be discussed in section @design-choices. Test scenarios in section @test-scenarios. And to close, running the game, in section @manual.
+First, the implementation itself will be discussed in section @implementation. Following the implementation, design choices will be discussed in section @design-choices, test scenarios in section @test-scenarios. And to close, running the game, in section @manual.
 
 
 #colbreak()
@@ -114,17 +114,16 @@ During the transition from lobby to a game, the list of id's of the player's are
 
 The lobbies object maintains a list of all lobbies that are currently present on the network. A player will create a lobby, which will be reflected in the lobbies list of the other players active on the network.
 
-If a player joins, the joining player get's a lobby object that is set to match the joined lobby. Other players on the network will receive the updated lobby information. More information about joining a lobby in @design-choices-lobby. Each player is also able to leave an already joined lobby.
+If a player joins, the joining player gets a lobby object that is set to match the joined lobby. Other players on the network will receive the updated lobby information. More information about joining a lobby in @design-choices-lobby. Each player is also able to leave an already joined lobby.
 
 
 == Game
 
 The Game object contains the state & logic of the Exploding Kittens game. Included in this state are the following most important fields: `GameDeck`, `GameTable`, `PlayerHands`.
 
-The `GameDeck` represents the list of cards from which players can draw a card. The state of the table is represented by the `GameTable`. It displays which card a user draws from the deck pile; which card a user played on the discard pile and the number of cards a user has remaining in its hand.
+The `GameDeck` represents the list of cards from which players can draw a card. The state of the table is represented by the `GameTable`. It displays which card a user draws from the deck pile; which card a user played on the discard pile, and the number of cards a user has remaining in its hand.
 
-Keeping record of which cards each player has in its hand is maintained by the class `PlayerHands`. For each player in the game, a separate `PlayerHand` object is stored. Containing the list of cards the user currently holds and the state of the player (dead/disconnected).
-
+Keeping record of which cards each player has in its hand is maintained by the class `PlayerHands`. It stores a separate `PlayerHand` object for every player, containing their current card list and connection state (such as "dead" or "disconnected").
 
 == Event Serialization
 
@@ -132,7 +131,7 @@ Building on the event system displayed during the practicums, each lobby/game ev
 
 Each individual lobby & game event has a matching record object. Every defined record must implement the serializable class. For each event, the event itself and a matching enum value (`LobbyEventType` / `GameEventType`) will be send.
 
-On the receiving side the AT remote interface sends the event, to the `KittensModel`, which will cast the `Record` to its correct type based on the `Enum` value. This structure of passing events is similar for the lobby & game state of the application.
+On the receiving side, the AT remote interface sends the event to the `KittensModel`, which will cast the `Record` to its correct type based on the `Enum` value. This structure of passing events is similar for the lobby & game state of the application.
 
 
 
@@ -156,21 +155,21 @@ This subsection will discuss design choices pertaining to the game.
 
 === Disconnects
 
-Depending on the state of the game, if a player is detected to be offline and it is currently that player's turn, the game is paused for all players, user input is blocked. In the other case, the players's are allowed to continue playing, until it is that offline player's turn.
+If a player goes offline during their turn, the game pauses for everyone and blocks all input. Otherwise, gameplay continues as normal until the offline player's turn is reached, at which point the game pauses.
 
 
 === Reconnect
 
-When a player reconnects after disconnecting from the network, the current player will send the updates value of the game to the reconnecting player.
+When a player reconnects after disconnecting from the network, the current player will send the updated game to the reconnecting player.
 
-On receiving the GameEvent, the player will replace the current game values with the new values. Currently the implementation is disabled, since the order of events is not guaranteed to be 'total', it is possible for the reconnect event to arrive before game event's send earlier.
+On receiving the GameEvent, the player will replace the current game values with the new values. Currently the implementation is disabled, since the order of events is not guaranteed to be 'total'. It is possible for the reconnect event to arrive before game events send earlier.
 
-Possible solution to this problem, is implementing a sort of order on the game events, or making the operations idempotent on the game state.
+Possible solution to this problem is, implementing a sort of order on the game events, or making the operations idempotent on the game state.
 
 
 === Exploding Kitten
 
-If a player draws an exploding exploding kitten card and no defuse card is present in the players hand, the player is considered dead.
+If a player draws an exploding kitten card and no defuse card is present in the players hand, the player is considered dead.
 
 For the implementation, it was chosen to discard all the cards in the player's hand. The game than continues without the player in the game order, but is allowed to spectate the game. If the player wishes, he is able to exit the application.
 
@@ -195,15 +194,12 @@ After a player is dead, he is still able to follow the game, but all his cards a
 
 In both cases, the player is removed from the game order.
 
-For the actions, where there is expected player action or application responses, these are handled by taking into account the 'online' player list.
-
-When playing a favor/cat card, if the card is allowed to be played (accepted by all participating players), the player may select the player he wishes to request a card from. The list of selectable players is kept up to date by the players are that are actively participating and online.
-
+For the actions, where there is expected player action or application responses, these are handled by taking into account the 'online' player list. When a player plays a favor or cat card and it is accepted by all participants, they may select a target player to request a card from. The list of selectable players is updated to include only those who are online.
 
 
 == AT
 
-This subsection will discuss design choices made pertaining to the distributed part of the application in Ambienttalk.
+This subsection will discuss design choices made pertaining to the distributed part of the application in AmbientTalk.
 
 
 === Nope Card Time-Out <at-time-out>
@@ -216,9 +212,9 @@ The description of the nope-card time-out system, can be seen in @nope-card-flow
 ) <nope-card-flowchart>
 
 
-When a card is played, the AT method `setNopeCardTimeOut` is called with the list of players currently in the game. For each player a future is created, when the future is resolved, the accompanying offline timer is cancelled. When the future is ruined, the `passPassPlayedCardTimer` method on the `Kittensmodel` class is called, passing the played card in that players name.
+When a card is played, the AT method `setNopeCardTimeOut` is called with the list of players currently in the game. For each player a future is created. When the future is resolved, the accompanying timer is cancelled. When the future is ruined, the `passPassPlayedCardTimer` method on the `Kittensmodel` class is called, passing the played card in that players name.
 
-The response timer is created, with a timing of 10 seconds (testing purposes). If the timer has elapsed, an exception is created named: `XReponseException`, with subtype: `Exeception`. The exeception is passed as a value to the `ruin` method on the `reponseResolver`. with a message indicating which player did not response in time. The message is than logged in the `catch` block of the future.
+The response timer is created, with a timing of 10 seconds (testing purposes). If the timer has elapsed, an exception is created, named: `XReponseException`, with subtype: `Exeception`. The exception is passed as a value to the `ruin` method on the `reponseResolver`. With a message indicating which player did not response in time. The message is than logged in the `catch` block of the future.
 
 
 === Offline Time-Out <offline-time-out>
@@ -243,14 +239,14 @@ The mock implementation can be found in the: `mock` directory inside the `test` 
 
 When starting a test scenario, a mock network is created. Each application receives a `MockInterface`, consisting of a `MockLocalInterface` and `MockRemoteInterface`. The `MockLocalInterface` implements the `atLocalInterface` interface class, as best as possible. The `MockRemoteInterface` is responsible for passing the received messages to the `KittensModel` class as the AT implementation does.
 
-The `MockNetwork` mimics the discovery of an actor when one is added to the network, the interface status is also propagated across the network.
+The `MockNetwork` mimics the discovery of an actor when one is added to the network. The interface status is also propagated across the network.
 
 Since the AT implementation expects events to be serialized across the network, the values passed through the mock network must also mimic this behavior. Copying the values passed over the network is handle by the `deepCopyRecord` function.
 
 
 == Threads
 
-To prevent threading issues when executing actions, such as clicking buttons, selecting rows in a table, the code must be passed to `awt.EventQueue`. This ensures all actions are processed in the correct order and no other thread than the `awt` one performs UI actions.
+To prevent threading issues when executing actions, such as clicking buttons or selecting rows in a table, the code must be passed to `awt.EventQueue`. This ensures all actions are processed in the correct order and no other thread than the `awt` one performs UI actions.
 
 Most calls to the `awt.EventQueue` are wrapped inside of a `CompletableFuture`, containing a delay depending on the action performed before. This allows the returning future to be delayed by calling `join` on the result. The main thread, running the network and application(s) can continue to work.
 
@@ -270,7 +266,7 @@ The following test scenarios are declared for the lobbies:
 
 === `playerLimitLobby`
 
-This test scenario ensures the lobby system does not allow for more than 4 players to be present inside the lobby, and resulting game.
+This test scenario ensures the lobby system does not allow more than 4 players to be present inside the lobby, and resulting game.
 
 
 
