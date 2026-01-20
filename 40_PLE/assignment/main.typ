@@ -68,6 +68,48 @@
 #colbreak()
 = Intro
 
+This report will discuss an implementation for the assignment "Exam assignment: Coroutines" for the course:"Programming Language Engineering".
+
+First, the special form: `newprocess` will be discussed in section @newprocess. Followed by the implementation of `transfer` in section @transfer.
+
+
+= Slip Version
+
+// TODO: Update to correct version
+// The Slip version used to implement the assignment, is version 11, but first class continuations are not implemented.
+
+
+#colbreak()
+= `newprocess` <newprocess>
+
+
+
+
+== Compilation
+
+
+=== Definitions
+
+
+=== Grammar
+
+
+=== Compile
+
+
+
+
+== Evaluation
+
+
+
+
+= `transfer` <transfer>
+
+
+
+= Test Files
+
 
 
 #set page(columns: 1)
