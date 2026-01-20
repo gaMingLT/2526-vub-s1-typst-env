@@ -73,6 +73,7 @@ This report will discuss an implementation for the assignment "Exam assignment: 
 First, the special form: `newprocess` will be discussed in section @newprocess. Followed by the implementation of `transfer` in section @transfer.
 
 
+
 = Slip Version
 
 // TODO: Update to correct version
@@ -83,20 +84,153 @@ First, the special form: `newprocess` will be discussed in section @newprocess. 
 = `newprocess` <newprocess>
 
 
+Adding the `newprocess` special form is done by adding all the same additions as the other special forms defined in the interpreter.
 
 
-== Compilation
+== Preparations
+
 
 
 === Definitions
 
 
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    static const TXT_type Main_Newprocess_String = "newprocess";
+    ```,
+  ),
+)
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    extern SYM_type Main_Newp;
+    ```,
+  ),
+)
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    SYM_type Main_Newp;
+    ```,
+  ),
+)
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    Main_Newp      = Pool_Enter(Main_Newprocess_String);
+    ```,
+  ),
+)
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    Main_Newp               = Pool_Initially_Enter(Main_Newprocess_String);
+    ```,
+  ),
+)
+
+
+
+
 === Grammar
+
+
+// TODO: Update code
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    NEP_tag = 0x16 << 1 | 0x0,
+    ```,
+  ),
+) <grammar-h-neptag>
+
+
+*TODO:* Add
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    typedef struct NEP *NEP_type;
+    ```,
+  ),
+) <grammar-h-neptype>
+
+
+In the `Grammar.h` file, the NEP type is added as shown in @grammar-h-neptype-impl.
+
+
+// TODO: Update code
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    typedef
+    struct NEP {
+        CEL_type hdr;
+        EXP_type name;
+        VEC_type bod;
+        NBR_type bsz;
+    } NEP;
+    ```,
+  ),
+) <grammar-h-neptype-impl>
+
+A matching `make_NEP` function is defined in `Grammar.c` file.
 
 
 === Compile
 
 
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    if (operator == Main_Newp)
+          return compile_newprocess(operands);
+    ```,
+  ),
+)
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    case NEP_tag:
+    ```,
+  ),
+)
+
+
+
+== Compile
+
+
+// ...
 
 
 == Evaluation
