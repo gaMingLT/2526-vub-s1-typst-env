@@ -355,10 +355,10 @@ Create the `nEP` evaluation frame, consisting of the name, body and body size.
     end_frame(nEP);
     ```,
   ),
-  caption: "Survive the list of operands",
+  caption: "",
 ) <evaluate-frame>
 
-Proceed to evaluate the compilation information.
+Proceed to evaluate the compilation information, as shown in @evaluate-prep.
 
 #figure(
   zebraw(
@@ -379,8 +379,8 @@ Proceed to evaluate the compilation information.
     survive_default(body);
     ```,
   ),
-  caption: "Evaluate - Preparations",
-) <evaluate-prep-1>
+  caption: "Push NEP Frame on stack",
+) <evaluate-prep>
 
 Extract the values from the compiled object during the compilation process.
 
@@ -388,9 +388,54 @@ Proceed to push the continuation `Continue_newprocess_body` on the stack with si
 
 Proceed to apply survive on the `body` object.
 
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    // Pop the process from the stack
+    process_stack = Thread_Pop();
+    process_stack->cnt = Main_Empty_Continuation;
 
+    // Create coroutine with its process context
+    coroutine = make_COR(name, body_size, body, process_stack);
+
+    // Return the created coroutine
+    return coroutine;
+    ```,
+  ),
+  caption: "Evaluate - Make coroutine",
+) <evaluate-make-cor>
 
 *TODO:* Continue here
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    // Create the 'coroutine' as a procedure
+    // - Name of the procedure, process name
+    // - Number of argument is zero
+    // - Frame size, size of the frame of the newprocess body
+    // - Body, is newprocess contents
+    // - Env, is the thread context
+    coroutine = make_PRC(Name, Main_Zero, Frame_Size, Body, (VEC_type) Context);
+
+    // Survive the coroutine
+    environment_size = Environment_Get_Environment_size();
+    survive_dynamic(coroutine,
+                    environment_size);
+
+    // Return the coroutine procedure
+    return coroutine;
+    ```,
+  ),
+  caption: "Evaluate - Make coroutine",
+) <evaluate-make-coroutine>
+
+
 
 
 #colbreak()
