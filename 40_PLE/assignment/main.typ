@@ -164,7 +164,7 @@ For the REPL to be able to detect `newprocess` in the REPL & Reclaim, are added 
 === Grammar
 
 // TODO: Update to correct sentence
-Define the `NEP_tag`, similar to tags for `while` expression, as shown in @grammar-h-neptag.
+Define the `NEP_tag`, similar to tags for `while` expression, as shown in @grammar-h-neptag. Like other expressions the `newprocess` is *not* a raw value and is marked accordingly.
 
 // TODO: Update code
 #figure(
@@ -547,6 +547,33 @@ The `Thread_Replace` method is added to the `SlipThread.c` file, it replaces the
   ),
   caption: "Transfer - Thread Replace",
 ) <transfer-thread-replace>
+
+
+
+#colbreak()
+= Discussion
+
+// == Preparations
+
+
+== Compilation
+
+During the compilation step is there is no need to push the list of `Operands` on the stack, because in contrast to `while` or `if`, there is no compile processes that needs to take place between retrieving the name & compiling the body of the process.
+
+To be absolutely sure, the `Operands` value is still claimed. Following the compilation of the body, the output is claimed to prevent any garbage collection.
+
+
+// TODO: Add compilation env/frame showcase?
+
+
+== Evaluation
+
+
+
+
+== Transfer
+
+
 
 
 // #pagebreak()
