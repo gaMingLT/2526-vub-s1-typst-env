@@ -1,0 +1,85 @@
+@startuml
+title "transfer_native - Visualization"
+
+start
+
+:Enter transfer_native(Vector);
+
+' :size = size_VEC(Vector);
+' if (size != 2?) then (yes)
+'     :Return error;
+'     stop
+' endif
+
+:Check Vector size;
+
+:Extract arguments;
+note right
+from_expr = Vector[1]
+to_expr   = Vector[2]
+end note
+
+:Retrieve grammar tags;
+note right
+from_tag = Grammar_Tag(from_expr)
+to_tag   = Grammar_Tag(to_expr)
+end note
+
+' if (from_tag != PRC_tag?) then (yes)
+'     :Return error;
+'     stop
+' endif
+
+' if (to_tag != PRC_tag?) then (yes)
+'     :Return error;
+'     stop
+' endif
+
+:Check grammar tags;
+
+
+:Cast expressions to processes;
+note right
+from_process = (PRC_type) from_expr
+to_process   = (PRC_type) to_expr
+end note
+
+:Extract target process context;
+note right
+to_context = to_process->env
+end note
+
+if (to_context == NULL?) then (yes)
+    :Return error;
+    stop
+endif
+
+:Thread_Keep();
+note right
+STACK / THREAD STATE
+-------------------------
+| current thread ctx   |
+-------------------------
+saved_context returned
+end note
+
+:Save current context
+into from_process->env;
+note right
+from_process->env =
+    saved_context
+end note
+
+:Thread_Replace(to_context);
+note right
+STACK / THREAD STATE
+-------------------------
+| to_context (new)     |
+-------------------------
+Current thread replaced
+end note
+
+:return Main_Unspecified;
+
+stop
+@enduml

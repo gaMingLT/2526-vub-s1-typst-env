@@ -1,0 +1,51 @@
+@startuml
+title "evaluate_newprocess - Visualization"
+
+start
+
+:Enter evaluate_newprocess(Newprocess);
+
+:Extract fields from Newprocess;
+note right
+body = Newprocess->bod
+body_size = Newprocess->bsz
+name = Newprocess->name
+end note
+
+:Thread_Push(Continue_newprocess_body);
+note right
+STACK (after push)
+-------------------------
+| nEP frame             |
+| bod  = body           |
+| bsz  = body_size      |
+| name = name           |
+-------------------------
+| previous frames ...   |
+end note
+
+:Initialize thread_frame fields;
+
+:survive_default(body);
+note right
+Ensures body is not
+collected by GC
+end note
+
+:Thread_Pop();
+note right
+STACK (after pop)
+-------------------------
+| previous frames ...   |
+-------------------------
+process_stack obtained
+end note
+
+:process_stack->cnt = Main_Empty_Continuation;
+
+:make_COR(name, body_size, body, process_stack);
+
+:return coroutine;
+
+stop
+@enduml

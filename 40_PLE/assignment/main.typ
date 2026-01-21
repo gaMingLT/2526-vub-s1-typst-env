@@ -74,7 +74,7 @@ First, the special form: `newprocess` will be discussed in section @newprocess. 
 
 
 
-= Slip Version
+// = Slip Version
 
 // TODO: Update to correct version
 // The Slip version used to implement the assignment, is version 11, but first class continuations are not implemented.
@@ -407,7 +407,8 @@ Proceed to apply survive on the `body` object.
   caption: "Evaluate - Make coroutine",
 ) <evaluate-make-cor>
 
-*TODO:* Continue here
+
+The runtime object that is returned as the coroutine, is a procedure, named with the name & body of the process, as shown in @evaluate-make-coroutine.
 
 
 #figure(
@@ -435,6 +436,9 @@ Proceed to apply survive on the `body` object.
   caption: "Evaluate - Make coroutine",
 ) <evaluate-make-coroutine>
 
+The name is passed to the procedure, number of arguments is zero, Frame_Size is the value of body_size, the body and lastly the Context, which is the process_stack value earlier.
+
+After the coroutine is created, apply the `survive_dynamic` method on it.
 
 
 
@@ -444,11 +448,125 @@ Proceed to apply survive on the `body` object.
 *TODO:* Continue here
 
 
+The native transfer procedure starts off with making sure there are the correct number of values and of the correct type, as shown in @transfer-checks.
 
-= Visualization
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    // Check the size of the vector, making sure
+    // the expected number of arguments are present
+    size = size_VEC(Vector);
+    if (size != 2)
+        return Main_Error_Text(EX2_error_string,
+                               trs_string);
+
+    // Extract the values from the input
+    from_expr = Vector[1];
+    to_expr = Vector[2];
+
+    // Retrieve the grammar tags from the input expressions
+    from_tag = Grammar_Tag(from_expr);
+    to_tag = Grammar_Tag(to_expr);
+
+    // Check if both are procedure grammar tags
+    if (from_tag != PRC_tag)
+        return Main_Error_Text("first argument must be a process", trs_string);
+    if (to_tag != PRC_tag)
+        return Main_Error_Text("second argument must be a process", trs_string);
+
+    // Once tag is verified, cast to PRC type
+    from_process = (PRC_type) from_expr;
+    to_process = (PRC_type) to_expr;
+    ```,
+  ),
+  caption: "Transfer - Checks",
+) <transfer-checks>
+
+The input vector, containing the process values is checked for correct value of 2 arguments.
+
+Get the grammar tag from both expression and check if both are of the procedure type.
+
+If both expression are of the `PRC_type`, cast the expression to said type.
+
+Before switch to the target process context, a check is performed to validate that the target process has a valid context, as shown in @transfer-target-check.
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    // Get the target process's context
+    to_context = (CNT_type) to_process->env;
+
+    // If target process has no context, we cannot continue
+    if (to_context == NULL)
+        return Main_Error_Text("target process has no context", trs_string);
+    ```,
+  ),
+  caption: "Transfer - Target Process Context Check",
+) <transfer-target-check>
+
+Finally, the context swap can take place, as shown in @transfer-swap-context. The current context is saved by calling the `Thread_Keep()` method. The `saved_context` is given as value to the `env` field on the `from_process` runtime object.
+
+With the current context saved, the current context is replaced by given `to_context` as a value to the `Thread_Replace` method.
+Returning `Main_Unspecified` as return value.
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    // Save the current process, by setting the env of the from process
+    saved_context = Thread_Keep();
+    from_process->env = (VEC_type) saved_context;
+
+    // Replace the current thread
+    Thread_Replace(to_context);
+
+    // Will use the current thread on top of the stack
+    return Main_Unspecified;
+    ```,
+  ),
+  caption: "Transfer - Swap Context",
+) <transfer-swap-context>
+
+The `Thread_Replace` method is added to the `SlipThread.c` file, it replaces the private `Current_Thread` variable with the given `Thread` value.
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    NIL_type Thread_Replace(CNT_type Thread) {
+      Current_thread = Thread;
+    }
+    ```,
+  ),
+  caption: "Transfer - Thread Replace",
+) <transfer-thread-replace>
 
 
-*TODO:* Continue here
+// #pagebreak()
+// = Visualization
+
+
+// #figure(
+//   image("images/evaluate_newp.png"),
+//   caption: "Newprocess - Stack & Context Visualization",
+// ) <newprocess-visualization>
+
+
+// #figure(
+//   image("images/transfer.png"),
+//   caption: "Transfer - Stack & Context Visualization",
+// ) <transfer-visualization>
+
+
+
+// *TODO:* Continue here
 
 
 
