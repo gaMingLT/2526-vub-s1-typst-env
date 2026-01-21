@@ -89,10 +89,12 @@ Adding the `newprocess` special form is done by adding all the same additions as
 
 == Preparations
 
+This subsection describes the preparations required to compile & evaluate the special form `newprocess`.
 
 
 === Definitions
 
+Start of by defining the name of the special form to be created, by creating a new text string as shown in @special-form-str.
 
 #figure(
   zebraw(
@@ -102,17 +104,11 @@ Adding the `newprocess` special form is done by adding all the same additions as
     static const TXT_type Main_Newprocess_String = "newprocess";
     ```,
   ),
-)
+  caption: "Special Form String Declaration",
+) <special-form-str>
 
-#figure(
-  zebraw(
-    numbering: true,
-    lang: false,
-    ```c
-    extern SYM_type Main_Newp;
-    ```,
-  ),
-)
+
+Define the symbol type of `Main_Newp` so the compiler is able to parse said expression, as shown in @special-form-type & @special-form-type-extern.
 
 #figure(
   zebraw(
@@ -122,8 +118,22 @@ Adding the `newprocess` special form is done by adding all the same additions as
     SYM_type Main_Newp;
     ```,
   ),
-)
+  caption: "Special Form Type",
+) <special-form-type>
 
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```c
+    extern SYM_type Main_Newp;
+    ```,
+  ),
+  caption: "Special Form Type Extern",
+) <special-form-type-extern>
+
+
+For the REPL to be able to detect `newprocess` in the REPL & Reclaim, are added as shown in @special-form-reclaim & @special-form-repl.
 
 #figure(
   zebraw(
@@ -133,7 +143,8 @@ Adding the `newprocess` special form is done by adding all the same additions as
     Main_Newp      = Pool_Enter(Main_Newprocess_String);
     ```,
   ),
-)
+  caption: "Special Form Reclaim",
+) <special-form-reclaim>
 
 
 #figure(
@@ -144,7 +155,8 @@ Adding the `newprocess` special form is done by adding all the same additions as
     Main_Newp               = Pool_Initially_Enter(Main_Newprocess_String);
     ```,
   ),
-)
+  caption: "Special Form REPL",
+) <special-form-repl>
 
 
 
@@ -237,12 +249,29 @@ A matching `make_NEP` function is defined in `Grammar.c` file.
 
 
 
-
+#colbreak()
 = `transfer` <transfer>
 
 
 
-= Test Files
+#colbreak()
+= Experiments
+
+
+The complete list of experiments can be found in section @appendix-experiments or as individual files in the slip directory.
+
+The following list of experiments illustrating the coroutines are included:
++ `single-process.slip`
++ `ping-pong.slip`
++ `producer-consumer.slip`
++ `call-reply.slip`
++ `round-robin.slip`
++ `round-robin-bug.slip`
+
+Majority of the examples have been slightly modified to work within the constraints of the current implementation.
+
+Newprocesses can only be set by using the `set!` expression & references to function inside of a `define` function have been removed.
+
 
 
 
@@ -250,7 +279,166 @@ A matching `make_NEP` function is defined in `Grammar.c` file.
 = Appendix <appendix>
 
 
+== Experiments <appendix-experiments>
 
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```rkt
+    (begin
+      (define pong '())
+      (define ping '())
+
+      (set! ping (newprocess "ping"
+                              (begin (define iter
+                                        (lambda ()
+                                          (begin (newline)
+                                                (display "ping")
+                                                (transfer ping pong)
+                                                )))
+                                      (iter))))
+
+      (set! pong (newprocess "pong"
+                            (begin (define iter
+                                      (lambda ()
+                                        (begin (newline)
+                                              (display "pong")
+                                              (transfer pong ping)
+                                              )))
+                                    (iter))))
+
+      (transfer ping ping))
+    ```,
+  ),
+  caption: "Ping Pong Example",
+) <test-ping-ping>
+
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```rkt
+    (begin
+      (define Producer '())
+      (define Consumer '())
+      (define Buffer '())
+      (define Full #f)
+      (define item 0)
+
+      (define ProduceItem
+        (lambda ()
+          (begin
+            (set! item (+ item 1))
+            (display "produce ")
+            (display item)
+            (newline)
+            item)))
+
+      (define ConsumeItem
+        (lambda (item)
+          (begin
+            (display "consume ")
+            (display item)
+            (newline))))
+
+      (set! Producer (newprocess
+                      "Producer"
+                      (begin
+                        (define item 0)
+                        (define loop
+                          (lambda ()
+                            (begin
+                              (if (not Full)
+                                  (begin
+                                    (define item (ProduceItem))
+                                    (set! Buffer item)
+                                    (set! Full #t)
+                                    (transfer Producer Consumer))
+                                  (begin
+                                    (display "waiting for consumer")
+                                    (newline)
+                                    (transfer Producer Consumer)))
+                              )))
+                        (loop))))
+    ;; Continued on next page
+    ```,
+  ),
+  caption: "Producer Consumer Part 1",
+) <test-producer-consumer-1>
+
+
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```rkt
+      ;; See previous page
+      (set! Consumer (newprocess
+                      "Consumer"
+                      (begin
+                        (define item '())
+                        (define loop
+                          (lambda ()
+                            (begin
+                              (if Full
+                                  (begin
+                                    (set! item Buffer)
+                                    (set! Full #f)
+                                    (ConsumeItem item)
+                                    (transfer Consumer Producer))
+                                  (begin
+                                    (display "waiting for producer")
+                                    (newline)
+                                    (transfer Consumer Producer)))
+                              )))
+                        (loop))))
+
+      (transfer Producer Producer))
+    ```,
+  ),
+  caption: "Producer Consumer Part 2",
+) <test-producer-consumer-2>
+
+
+
+#figure(
+  zebraw(
+    numbering: true,
+    lang: false,
+    ```rkt
+    (begin
+        (define spr '())
+        (define msg 0)
+
+        (define CallPartner
+            (lambda (P)
+                (display P)
+                (newline)
+                (set! spr (newprocess P (transfer spr spr)))))
+
+        (define Reply
+            (lambda (x)
+                (begin
+                    (display x)
+                    (newline)
+                    (set! msg x)
+                    (transfer spr spr)
+                    x)))
+
+        (CallPartner "call")
+        (Reply "hello")
+
+        (display msg))
+    ```,
+  ),
+  caption: "Call - Reply Example",
+) <test-call-reply>
 
 
 #bibliography("references.bib")
