@@ -70,27 +70,29 @@
 
 This report will discuss an implementation for the assignment "Exam assignment: Coroutines" for the course:"Programming Language Engineering".
 
-First, the implementation proceeding the final one is shown in section @first-iter and reasoning. Followed by the final implement in section @final-impl.
+First, the implementation proceeding the final one is shown in section @first-iter and reasoning, followed by the final implement in section @final-impl.
 
 
-= Slip Version
+= Slip version
 
 The Slip version used to implement the assignment, is version 9.
 
 
 
 #colbreak()
-= First Iteration <first-iter>
+= First iteration <first-iter>
 
 This subsection will discuss the implementation, before arriving at the final implementation.
 
 == Newprocess
 
-For the first iteration, the runtime type used for storing information required for context switching was the `PRC_type`
+For the first iteration, the runtime type used for storing information required for context switching was the `PRC_type`.
 
-On evaluation of the newprocess, the `make_coroutine` procedure, used the `make_PRC` to create a procedure (lambda) named as the name given to the newprocess.
 
-The `PRC_type` runtime type, has a `env` field, to which the `Context` field was stored by casting the `CNT_Type` to a `VEC_type` as required by the `make_PRC` function.
+
+On evaluation of the newprocess, the `make_coroutine` procedure uses the `make_PRC` to create a procedure (lambda) named as the name given to the newprocess.
+
+The `PRC_type` runtime type has a `env` field, to which the `Context` field was stored by casting the `CNT_Type` to a `VEC_type` as, required by the `make_PRC` function.
 
 The `Context` value being the result of calling `Thread_Pop` after pushing `Continue_newprocess_body` on top of the stack using `Thread_Push`. The pushed continuation being of the `neP` type, consisting of the body, body_size and procedure name.
 
@@ -101,16 +103,16 @@ When entering the `transfer_native`, the runtime expression is checked for the c
 If both arguments are of the `PRC_type`, the execution continues. Before context switch can take place, the `env` field on the `PRC_type` is checked for a value, in this case the `CNT_type`, which is the `Context` value from earlier.
 
 
-If that is the case, the context switch can take place, the `env` field is cast to `CNT_type` and the `Thread_Replace`  method is called with the value is input. The value `Main_Unspecified` is returned.
+If that is the case, the context switch can take place, the `env` field is cast to `CNT_type` and the `Thread_Replace`  method is called with the value `to_context` as input. The value `Main_Unspecified` is returned.
 
-The program, will continue with the current thread on the stack, which is the `Continue_newprocess_body` continuation.
+The program will continue with the current thread on the stack, which is the `Continue_newprocess_body` continuation.
 
-The interpreter will enter the procedure: `continue_newprocess_body`. The current thread value is retrieved using `Thread_Peak`. From the current thread the values: `body`, `bsz` are are taken. The body is evaluated using the `evaluate_inline_sequence` procedure.
+The interpreter will enter the procedure: `continue_newprocess_body`. The current thread value is retrieved using `Thread_Peak`. From the current thread, the values: `body`, `bsz` are retrieved. The body is evaluated using the `evaluate_inline_sequence` procedure.
 
 
 == Problems
 
-Running the above implementation with the experiment files mentioned in @experiments, showcases some shortcomings.
+Running the above implementation with specific experiment files mentioned in @experiments, showcases some shortcomings in the implementation.
 
 Executing the script: `roundrobin-bug.slip`, showcases a bug with switching the environments between the processes, as shown in @roundrobin-bug.
 
@@ -119,7 +121,8 @@ Executing the script: `roundrobin-bug.slip`, showcases a bug with switching the 
   caption: "Round robin Environment bug",
 ) <roundrobin-bug>
 
-A similar issues occurs when executing the `ping-pong2.slip` experiment, the output is continuously `ping` instead of the expected `ping, pong ...` output.
+
+A similar issue occurs when executing the `ping-pong2.slip` experiment, the output is continuously `ping` instead of the expected `ping, pong ...` output.
 
 
 
@@ -144,7 +147,7 @@ Since in contrast to other special forms, the information required during the co
 == Compilation
 
 
-During the compilation step is there is no need to push the list of `Operands` on the stack, because in contrast to `while` or `if`, there is no compile processes that needs to take place between retrieving the name & compiling the body of the process.
+During the compilation step there is no need to push the list of `Operands` on the stack, because in contrast to `while` or `if`, there is no compile processes that needs to take place between retrieving the name & compiling the body of the process.
 
 To be absolutely sure, the `Operands` value is still claimed. Following the compilation of the body, the output is claimed to prevent any garbage collection.
 
@@ -194,7 +197,7 @@ The `env` and `frm` values of the `COR_type` are set as the empty vector during 
 
 == Transfer
 
-The expected runtime values are now of the `COR_type`, once the grammar tags are confirmed for both values, the execution may continue. The context check, instead of checking on the `env` field, now checks on the `cnt` field.
+The expected runtime values are now of the `COR_type` type. Once the grammar tags are confirmed for both values, the execution may continue. The context check, is now performed on the `cnt` field instead of on the `env` field.
 
 
 // *TODO:* Update here
@@ -205,14 +208,14 @@ To initiate the coroutines, runtime values of the same coroutine are passed to t
 In case the runtime values are not the same, the current point of continuation is saved by calling `Thread_Keep`. The `from_process` is updated with the new `cnt` value. The current environment & frame are saved by calling in order: `Environment_Get_Environment` and `Environment_Get_Frame`.
 
 
-From the `to_process`, the `env` & `frm` values are retrieved, if they are not empty (not first iteration), the environment & frame are set to saved values. The program continues with again calling `Thread_Replace` with `to_context` as the value.
+From the `to_process`, the `env` & `frm` values are retrieved. If the values are not empty (not first iteration), the environment & frame are set to previously saved values. The program continues with again calling `Thread_Replace` with `to_context` as the input value.
 
 
 // *TODO:* Update here
 
 == Problems
 
-The current implementation, for the `ping-pong2.slip` experiment outputs a continues stream of `ping` values, but in the beginning of the process performs the start and one context switch as expected. This situation can be seen in image @ping-pong2-bug.
+The current implementation, for the `ping-pong2.slip` experiment outputs a continues stream of `ping` values. In the beginning of the program output, the initial context switch succeeds, as does the first context switch, but subsequent context switches fail. This scenario can be seen in image @ping-pong2-bug.
 
 #figure(
   image("images/ping-pong2-bug.png"),
@@ -248,4 +251,4 @@ The experiments: `ping-pong.slip`, `producer-consumer.slip` and `call-reply.slip
 
 The experiments: `roundrobin.slip` & `roundrobin-bug.slip` is one additional experiment, expanding the concept of the producer-consumer.
 
-The value of the `name` variable passed to the `ProduceItem`, in the second producer, receives the value of the `item` just produced & consumed by the previous coroutines.
+The value of the `name` variable passed to the `ProduceItem` in the second producer, receives the value of the `item` just produced & consumed by the previous coroutines.
