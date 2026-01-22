@@ -197,14 +197,33 @@ The `env` and `frm` values of the `COR_type` are set as the empty vector during 
 The expected runtime values are now of the `COR_type`, once the grammar tags are confirmed for both values, the execution may continue. The context check, instead of checking on the `env` field, now checks on the `cnt` field.
 
 
-*TODO:* Update here
+// *TODO:* Update here
+
+To initiate the coroutines, runtime values of the same coroutine are passed to the `transfer` function. The only action that is needed to take place is calling the `Thread_Replace` with the `to_context` as the value. This will call the `continue_newprocess_body` procedure and execute the body of the coroutine.
+
+
+In case the runtime values are not the same, the current point of continuation is saved by calling `Thread_Keep`. The `from_process` is updated with the new `cnt` value. The current environment & frame are saved by calling in order: `Environment_Get_Environment` and `Environment_Get_Frame`.
+
+
+From the `to_process`, the `env` & `frm` values are retrieved, if they are not empty (not first iteration), the environment & frame are set to saved values. The program continues with again calling `Thread_Replace` with `to_context` as the value.
+
+
+// *TODO:* Update here
+
+== Problems
+
+The current implementation, for the `ping-pong2.slip` experiment outputs a continues stream of `ping` values, but in the beginning of the process performs the start and one context switch as expected. This situation can be seen in image @ping-pong2-bug.
+
+#figure(
+  image("images/ping-pong2-bug.png"),
+  caption: "Ping Pong 2 - Bug",
+) <ping-pong2-bug>
+
+The bug alluded to earlier in @roundrobin-bug is still present in this implementation. But the process of swapping environments & frames now takes place in contrast to previous implementation.
 
 
 
-
-
-
-#colbreak()
+// #colbreak()
 = Experiments <experiments>
 
 
@@ -230,172 +249,3 @@ The experiments: `ping-pong.slip`, `producer-consumer.slip` and `call-reply.slip
 The experiments: `roundrobin.slip` & `roundrobin-bug.slip` is one additional experiment, expanding the concept of the producer-consumer.
 
 The value of the `name` variable passed to the `ProduceItem`, in the second producer, receives the value of the `item` just produced & consumed by the previous coroutines.
-
-
-// #set page(columns: 1)
-// = Appendix <appendix>
-
-
-// == Experiments <appendix-experiments>
-
-
-// #figure(
-//   zebraw(
-//     numbering: true,
-//     lang: false,
-//     ```rkt
-//     (begin
-//       (define pong '())
-//       (define ping '())
-
-//       (set! ping (newprocess "ping"
-//                               (begin (define iter
-//                                         (lambda ()
-//                                           (begin (newline)
-//                                                 (display "ping")
-//                                                 (transfer ping pong)
-//                                                 )))
-//                                       (iter))))
-
-//       (set! pong (newprocess "pong"
-//                             (begin (define iter
-//                                       (lambda ()
-//                                         (begin (newline)
-//                                               (display "pong")
-//                                               (transfer pong ping)
-//                                               )))
-//                                     (iter))))
-
-//       (transfer ping ping))
-//     ```,
-//   ),
-//   caption: "Ping Pong Example",
-// ) <test-ping-ping>
-
-
-
-// #figure(
-//   zebraw(
-//     numbering: true,
-//     lang: false,
-//     ```rkt
-//     (begin
-//       (define Producer '())
-//       (define Consumer '())
-//       (define Buffer '())
-//       (define Full #f)
-//       (define item 0)
-
-//       (define ProduceItem
-//         (lambda ()
-//           (begin
-//             (set! item (+ item 1))
-//             (display "produce ")
-//             (display item)
-//             (newline)
-//             item)))
-
-//       (define ConsumeItem
-//         (lambda (item)
-//           (begin
-//             (display "consume ")
-//             (display item)
-//             (newline))))
-
-//       (set! Producer (newprocess
-//                       "Producer"
-//                       (begin
-//                         (define item 0)
-//                         (define loop
-//                           (lambda ()
-//                             (begin
-//                               (if (not Full)
-//                                   (begin
-//                                     (define item (ProduceItem))
-//                                     (set! Buffer item)
-//                                     (set! Full #t)
-//                                     (transfer Producer Consumer))
-//                                   (begin
-//                                     (display "waiting for consumer")
-//                                     (newline)
-//                                     (transfer Producer Consumer)))
-//                               )))
-//                         (loop))))
-//     ;; Continued on next page
-//     ```,
-//   ),
-//   caption: "Producer Consumer Part 1",
-// ) <test-producer-consumer-1>
-
-
-
-
-// #figure(
-//   zebraw(
-//     numbering: true,
-//     lang: false,
-//     ```rkt
-//       ;; See previous page
-//       (set! Consumer (newprocess
-//                       "Consumer"
-//                       (begin
-//                         (define item '())
-//                         (define loop
-//                           (lambda ()
-//                             (begin
-//                               (if Full
-//                                   (begin
-//                                     (set! item Buffer)
-//                                     (set! Full #f)
-//                                     (ConsumeItem item)
-//                                     (transfer Consumer Producer))
-//                                   (begin
-//                                     (display "waiting for producer")
-//                                     (newline)
-//                                     (transfer Consumer Producer)))
-//                               )))
-//                         (loop))))
-
-//       (transfer Producer Producer))
-//     ```,
-//   ),
-//   caption: "Producer Consumer Part 2",
-// ) <test-producer-consumer-2>
-
-
-
-// #figure(
-//   zebraw(
-//     numbering: true,
-//     lang: false,
-//     ```rkt
-//     (begin
-//         (define spr '())
-//         (define msg 0)
-
-//         (define CallPartner
-//             (lambda (P)
-//                 (display P)
-//                 (newline)
-//                 (set! spr (newprocess P (transfer spr spr)))))
-
-//         (define Reply
-//             (lambda (x)
-//                 (begin
-//                     (display x)
-//                     (newline)
-//                     (set! msg x)
-//                     (transfer spr spr)
-//                     x)))
-
-//         (CallPartner "call")
-//         (Reply "hello")
-
-//         (display msg))
-//     ```,
-//   ),
-//   caption: "Call - Reply Example",
-// ) <test-call-reply>
-
-
-// #bibliography("references.bib")
