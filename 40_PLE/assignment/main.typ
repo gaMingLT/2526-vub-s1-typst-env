@@ -75,7 +75,7 @@ First, the implementation proceeding the final one is shown in section @first-it
 
 = Slip version
 
-The Slip version used to implement the assignment, is version 9. The following list of files were modified: `SlipCompile.*`, `SlipEvaluate.*`, `SlipGrammar.*`, `SlipThread.*`, `SlipMain.*`.
+The Slip version used to implement the assignment, is version 9. The following list of files were modified: `SlipCompile.*`, `SlipEvaluate.*`, `SlipGrammar.*`, `SlipThread.*`, `SlipMain.*`, `SlipNative.*`.
 
 
 
