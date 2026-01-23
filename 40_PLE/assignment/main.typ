@@ -229,6 +229,8 @@ The bug alluded to earlier in @roundrobin-bug has now been fixed, and the output
 
 The current implementation, for the `ping-pong2.slip` experiment will output the expected output, but after a few seconds the error: `insufficient memory` will appear At the moment of writing no fix for this issue has been found.
 
+The output for the `call-rely.slip` experiment also does not match the expected output. The program terminates after 3 iterations.
+
 
 
 // #colbreak()
@@ -243,10 +245,9 @@ The complete list of experiments can be found in the slip directory. The followi
 + `call-reply.slip`
 + `roundrobin.slip`
 + `roundrobin-bug.slip`
++ `circle.slip`
 
 Majority of the examples have been slightly modified to work within the constraints of the current implementation.
-
-Newprocesses can only be set by using the `set!` expression.
 
 == Examples
 
@@ -254,6 +255,7 @@ The experiments: `ping-pong.slip`, `producer-consumer.slip` and `call-reply.slip
 
 == Extra(s)
 
-The experiments: `roundrobin.slip` & `roundrobin-bug.slip` are one additional type of experiment, expanding the concept of the producer-consumer scenario.
+The experiments: `roundrobin.slip` & `roundrobin-bug.slip` are one additional type of experiment, expanding the concept of the producer-consumer scenario. The value of the `name` variable passed to the `ProduceItem` method showcases which producer produced the item.
 
-The value of the `name` variable passed to the `ProduceItem` method showcases which producer produced the item.
+
+The `circle.slip` experiments, consists of 3 producers, 2 consumers and one organizer. The organizer, will depending on the state of the buffer, produce or consume the item in said buffer. The coroutine to which responsibility is given, depends on the `prod-ctr` and `cons-ctr` values.
