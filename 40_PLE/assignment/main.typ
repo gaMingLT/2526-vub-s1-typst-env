@@ -70,12 +70,13 @@
 
 This report will discuss an implementation for the assignment "Exam assignment: Coroutines" for the course:"Programming Language Engineering".
 
-First, the implementation proceeding the final one is shown in section @first-iter and reasoning, followed by the final implement in section @final-impl.
+First, the implementation proceeding the final one is shown in section @first-iter and reasoning, followed by the final implement in section @design-choices.
 
 
 = Slip version
 
-The Slip version used to implement the assignment, is version 9.
+The Slip version used to implement the assignment, is version 9. The following list of files were modified: `SlipCompile.*`, `SlipEvaluate.*`, `SlipGrammar.*`, `SlipThread.*`, `SlipMain.*`.
+
 
 
 
@@ -126,7 +127,7 @@ A similar issue occurs when executing the `ping-pong2.slip` experiment, the outp
 
 
 
-= Implementation <final-impl>
+= Design Choices <design-choices>
 
 This section will discuss the choices made in the final implementation.
 
