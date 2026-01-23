@@ -141,7 +141,7 @@ The `PRC_type` runtime type is replaced with the `COR_type`. The `C0R_type` cons
 
 As other grammar types, grammar tags and auxiliary procedures are also created. The `NEP_type` is the same as in the @first-iter implementation. The `NEP_type` can be considered the compile type while `COR_type` the runtime type.
 
-Since in contrast to other special forms, the information required during the compilation & evaluation steps is separated.
+Since in contrast to other special forms, the information required during the compilation & evaluation steps is different.
 
 
 == Compilation
@@ -173,18 +173,25 @@ Less information is now used for creating the runtime type `COR_type`, consistin
 The `make_coroutine` procedure, creates a `COR_type` procedure using the grammar method: `make_COR` as shown in @eval-make-coroutine.
 
 
+// TODO: Update code
 #figure(
   zebraw(
     numbering: true,
     lang: false,
     ```c
     static COR_type make_coroutine(EXP_type Name, CNT_type Context) {
-        COR_type coroutine;
+      COR_type coroutine;
+      VEC_type environment, frame;
 
-        coroutine = make_COR(Name, Context, Main_Empty_Vector, Main_Empty_Vector);
+      // Get the environment & frame
+      environment = Environment_Get_Environment();
+      frame = Environment_Get_Frame();
 
-        // Return the coroutine procedure
-        return coroutine;
+      // Set the name, context (CNT), environment and frame of the coroutine
+      coroutine = make_COR(Name, Context, environment, frame);
+
+      // Return the coroutine procedure
+      return coroutine;
     }
     ```,
   ),
@@ -192,7 +199,7 @@ The `make_coroutine` procedure, creates a `COR_type` procedure using the grammar
 ) <eval-make-coroutine>
 
 
-The `env` and `frm` values of the `COR_type` are set as the empty vector during initial evaluation moment.
+The `env` and `frm` values of the `COR_type` are set as the environment & frame at moment of evaluation.
 
 
 == Transfer
@@ -202,27 +209,25 @@ The expected runtime values are now of the `COR_type` type. Once the grammar tag
 
 // *TODO:* Update here
 
-To initiate the coroutines, runtime values of the same coroutine are passed to the `transfer` function. The only action that is needed to take place is calling the `Thread_Replace` with the `to_context` as the value. This will call the `continue_newprocess_body` procedure and execute the body of the coroutine.
+The current continuation state is saved in the `cnt` field of the `from_process`, such are the current state of the `environment` and `frame` values.
 
+With the state of the `from_process` saved the context switch transfer can continue. The environment (`env`) and frame (`frm`) values are retrieved from the process.
 
-In case the runtime values are not the same, the current point of continuation is saved by calling `Thread_Keep`. The `from_process` is updated with the new `cnt` value. The current environment & frame are saved by calling in order: `Environment_Get_Environment` and `Environment_Get_Frame`.
+The current environment & frame are replaced with the previously retrieved values.
 
+The last step to complete the transfer is setting the currently active thread, this is done using `Thread_Replace` with the `to_context` continuation as value.
 
-From the `to_process`, the `env` & `frm` values are retrieved. If the values are not empty (not first iteration), the environment & frame are set to previously saved values. The program continues with again calling `Thread_Replace` with `to_context` as the input value.
+The transfer function itself does not return a value (`Main_Unspecified`). The continuation stack will proceed to execute the first thread on the stack, with contains a continuation to the function: `continue_newprocess_body`.
 
 
 // *TODO:* Update here
 
 == Problems
 
-The current implementation, for the `ping-pong2.slip` experiment outputs a continues stream of `ping` values. In the beginning of the program output, the initial context switch succeeds, as does the first context switch, but subsequent context switches fail. This scenario can be seen in image @ping-pong2-bug.
+The bug alluded to earlier in @roundrobin-bug has now been fixed, and the output proceeds as expected.
 
-#figure(
-  image("images/ping-pong2-bug.png"),
-  caption: "Ping Pong 2 - Bug",
-) <ping-pong2-bug>
 
-The bug alluded to earlier in @roundrobin-bug is still present in this implementation. But the process of swapping environments & frames now takes place in contrast to previous implementation.
+The current implementation, for the `ping-pong2.slip` experiment will output the expected output, but after a few seconds the error: `insufficient memory` will appear At the moment of writing no fix for this issue has been found.
 
 
 
@@ -249,6 +254,6 @@ The experiments: `ping-pong.slip`, `producer-consumer.slip` and `call-reply.slip
 
 == Extra(s)
 
-The experiments: `roundrobin.slip` & `roundrobin-bug.slip` is one additional experiment, expanding the concept of the producer-consumer.
+The experiments: `roundrobin.slip` & `roundrobin-bug.slip` are one additional type of experiment, expanding the concept of the producer-consumer scenario.
 
-The value of the `name` variable passed to the `ProduceItem` in the second producer, receives the value of the `item` just produced & consumed by the previous coroutines.
+The value of the `name` variable passed to the `ProduceItem` method showcases which producer produced the item.
