@@ -83,7 +83,7 @@ The Slip version used to implement the assignment, is version 9. The following l
 #colbreak()
 = First iteration <first-iter>
 
-This subsection will discuss the implementation, before arriving at the final implementation.
+This subsection will discuss the initial implementation, before arriving at the final implementation.
 
 == Newprocess
 
@@ -93,7 +93,7 @@ For the first iteration, the runtime type used for storing information required 
 
 On evaluation of the newprocess, the `make_coroutine` procedure uses the `make_PRC` to create a procedure (lambda) named as the name given to the newprocess.
 
-The `PRC_type` runtime type has a `env` field, to which the `Context` field was stored by casting the `CNT_Type` to a `VEC_type` as, required by the `make_PRC` function.
+The `PRC_type` runtime type has a `env` field, to which the `Context` field was stored by casting the `CNT_Type` to a `VEC_type`, as required by the `make_PRC` function.
 
 The `Context` value being the result of calling `Thread_Pop` after pushing `Continue_newprocess_body` on top of the stack using `Thread_Push`. The pushed continuation being of the `neP` type, consisting of the body, body_size and procedure name.
 
@@ -101,7 +101,7 @@ The `Context` value being the result of calling `Thread_Pop` after pushing `Cont
 
 When entering the `transfer_native`, the runtime expression is checked for the correct runtime type, in this case being the `PRC_type`.
 
-If both arguments are of the `PRC_type`, the execution continues. Before context switch can take place, the `env` field on the `PRC_type` is checked for a value, in this case the `CNT_type`, which is the `Context` value from earlier.
+If both arguments are of the `PRC_type`, the execution continues. Before context switch can take place. The `env` field on the `PRC_type` is checked for a value, in this case the `CNT_type`, which is the `Context` value from earlier.
 
 
 If that is the case, the context switch can take place, the `env` field is cast to `CNT_type` and the `Thread_Replace`  method is called with the value `to_context` as input. The value `Main_Unspecified` is returned.
@@ -148,7 +148,7 @@ Since in contrast to other special forms, the information required during the co
 == Compilation
 
 
-During the compilation step there is no need to push the list of `Operands` on the stack, because in contrast to `while` or `if`, there is no compile processes that needs to take place between retrieving the name & compiling the body of the process.
+During the compilation step, there is no need to push the list of `Operands` on the stack, because in contrast to `while` or `if`, there is no compile processes that needs to take place between retrieving the name & compiling the body of the process.
 
 To be absolutely sure, the `Operands` value is still claimed. Following the compilation of the body, the output is claimed to prevent any garbage collection.
 
@@ -169,12 +169,11 @@ The runtime evaluation that created the `PRC_type` is replaced with the procedur
   caption: "Evaluation - Make coroutine",
 ) <eval-call-make-coroutine>
 
-Less information is now used for creating the runtime type `COR_type`, consisting only of the `name` and `process_stack` value. The latter being the `CNT_type` thread value.
+Less information is now used for creating the runtime type `COR_type`, consisting of the `name` and `process_stack`. The latter being the `CNT_type` thread value.
 
 The `make_coroutine` procedure, creates a `COR_type` procedure using the grammar method: `make_COR` as shown in @eval-make-coroutine.
 
 
-// TODO: Update code
 #figure(
   zebraw(
     numbering: true,
@@ -205,30 +204,27 @@ The `env` and `frm` values of the `COR_type` are set as the environment & frame 
 
 == Transfer
 
-The expected runtime values are now of the `COR_type` type. Once the grammar tags are confirmed for both values, the execution may continue. The context check, is now performed on the `cnt` field instead of on the `env` field.
+The expected runtime values are now of the `COR_type` type. Once the grammar tags are confirmed for both values, the execution may continue. The context check is now performed on the `cnt` field instead of on the `env` field.
 
 
-// *TODO:* Update here
 
-The current continuation state is saved in the `cnt` field of the `from_process`, such are the current state of the `environment` and `frame` values.
+The current continuation state is saved in the `cnt` field of the `from_process`, in addition so are the current state of the `environment` and `frame` values.
 
-With the state of the `from_process` saved the context switch transfer can continue. The environment (`env`) and frame (`frm`) values are retrieved from the process.
+With the state of the `from_process` saved, the context switch transfer can continue. The environment (`env`) and frame (`frm`) values are retrieved from the process.
 
 The current environment & frame are replaced with the previously retrieved values.
 
-The last step to complete the transfer is setting the currently active thread, this is done using `Thread_Replace` with the `to_context` continuation as value.
+The last step to complete the transfer is setting the currently active thread. This is done using `Thread_Replace` with the `to_context` continuation as value.
 
-The transfer function itself does not return a value (`Main_Unspecified`). The continuation stack will proceed to execute the first thread on the stack, with contains a continuation to the function: `continue_newprocess_body`.
+The transfer function itself does not return a value (`Main_Unspecified`). The continuation stack will proceed to execute the first thread on the stack, which contains a continuation to the function: `continue_newprocess_body`.
 
-
-// *TODO:* Update here
 
 == Problems
 
 The bug alluded to earlier in @roundrobin-bug has now been fixed, and the output proceeds as expected.
 
 
-The current implementation, for the `ping-pong2.slip` experiment will output the expected output, but after a few seconds the error: `insufficient memory` will appear At the moment of writing no fix for this issue has been found.
+The current implementation, for the `ping-pong2.slip` experiment will output the expected output, but after a few seconds the error: `insufficient memory` will appear. At the moment of writing no fix for this issue has been found.
 
 The output for the `call-rely.slip` experiment also does not match the expected output. The program terminates after 3 iterations.
 
@@ -259,4 +255,4 @@ The experiments: `ping-pong.slip`, `producer-consumer.slip` and `call-reply.slip
 The experiments: `roundrobin.slip` & `roundrobin-bug.slip` are one additional type of experiment, expanding the concept of the producer-consumer scenario. The value of the `name` variable passed to the `ProduceItem` method showcases which producer produced the item.
 
 
-The `circle.slip` experiments, consists of 3 producers, 2 consumers and one organizer. The organizer, will depending on the state of the buffer, produce or consume the item in said buffer. The coroutine to which responsibility is given, depends on the `prod-ctr` and `cons-ctr` values.
+The `circle.slip` experiments, consists of three producers, two consumers and one organizer process. The organizer, will depending on the state of the buffer, produce or consume the item in said buffer. The coroutine to which responsibility is given, depends on the `prod-ctr` and `cons-ctr` values.
